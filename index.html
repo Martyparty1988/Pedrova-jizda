@@ -6,6 +6,15 @@
     <title>Pedrova jízda</title>
     <meta name="description" content="Procedurální underground runner s vlastním WebGL enginem.">
     <meta name="theme-color" content="#00AACC">
+    
+    <!-- PWA a Apple meta tagy pro fullscreen aplikaci -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pedrova jízda">
+    <!-- <link rel="manifest" href="manifest.json"> -->
+    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,700;1,400&family=Teko:wght@400;600&display=swap" rel="stylesheet">
@@ -195,7 +204,7 @@
     </div>
 
     <script type="module">
-    const HLASKY_JSON = { "start": ["Třesou se mi ruce, ale musím běžet.", "Ještě jedna dávka a bude líp.", "Tohle je poslední jízda... fakt."], "jump": ["Přeskočit kaluž vlastní beznaděje.", "Skočím pro to, i kdybych měl padnout.", "Letím, i když mám křídla z popela."], "frontflip": ["Salto pro pár drobných.", "Tohle včera v deliriu vypadalo líp.", "Ještě se u toho stihnu poškrábat."], "slide": ["Sklouznout po dně, můj denní chleba.", "Podlézám další překážku života.", "Dole je špína, ale aspoň je to jistota."], "collision": ["Narazil jsem. Zase.", "Konec? Nebo jen další probuzení do pekla?", "Světlo... to bude sanitka."], "gameover": ["Došlo zboží, došel dech.", "Padnul jsem. Zvedne mě někdo?", "Tentokrát to bylo na tvrdo."], "powerup": ["Jo! To je ono! Cítím to!", "Teď mě nic nezastaví! Nic!", "Konečně! Svět dává smysl!"] };
+    const HLASKY_JSON = { "start": ["Třesou se mi ruce, ale musím běžet.", "Ještě jedna dávka a bude líp.", "Tohle je poslední jízda... fakt."], "jump": ["Přeskočit kaluž vlastní beznaděje.", "Skočím pro to, i kdybych měl padnout.", "Letím, i když mám křídla z popela."], "frontflip": ["Salto pro pár drobných.", "Tohle včera v deliriu vypadalo líp.", "Ještě se u toho stihnu poškrábat."], "slide": ["Sklouznout po dně, můj denní chleba.", "Podlézám další překážku života.", "Dole je špína, ale aspon je to jistota."], "collision": ["Narazil jsem. Zase.", "Konec? Nebo jen další probuzení do pekla?", "Světlo... to bude sanitka."], "gameover": ["Došlo zboží, došel dech.", "Padnul jsem. Zvedne mě někdo?", "Tentokrát to bylo na tvrdo."], "powerup": ["Jo! To je ono! Cítím to!", "Teď mě nic nezastaví! Nic!", "Konečně! Svět dává smysl!"] };
     const ANALYSIS_QUOTES = [ "Skóre nic moc, ale aspoň jsi běžel. Většina to vzdá už na startu.", "Celkem slušná jízda. Skoro jsi zapomněl, že jsi na dně. Skoro.", "Motal ses tam jak vítr v igelitce. Příště víc rovně a míň paniky.", "Hele, na to, v jakým jsi stavu, to nebylo špatný. Teď si dej pauzu, než se složíš.", "Viděl jsem krysy s lepším smyslem pro směr. Ale snaha se cení.", "Sbíral jsi to jak o život. Ta závislost tě jednou zabije... nebo ti nahraje rekord." ];
 
     class FofrPedro3DHardcore {
@@ -276,7 +285,7 @@
 
         setupWorld(Reflector) {
             this.scene.fog = new this.THREE.Fog(0x101015, 15, 80);
-            this.scene.add(new this.THREE.AmbientLight(0x404040, 1.5));
+            this.scene.add(new this.THREE.AmbientLight(0x404040, 2.5)); // Zvýšená intenzita ambientního světla
 
             const playerGroup = new this.THREE.Group();
             const coreGeo = new this.THREE.SphereGeometry(0.2, 16, 8);
@@ -304,7 +313,7 @@
             this.floor = new Reflector(floorGeo, { clipBias: 0.003, textureWidth: window.innerWidth * window.devicePixelRatio, textureHeight: window.innerHeight * window.devicePixelRatio, color: 0x222222 });
             this.floor.rotation.x = -Math.PI / 2; this.floor.position.y = -1; this.scene.add(this.floor);
             
-            this.keyLight = new this.THREE.SpotLight(0xffffff, 2.0, 100, Math.PI / 4, 0.8);
+            this.keyLight = new this.THREE.SpotLight(0xffffff, 2.0, 100, Math.PI / 3.5, 0.8); // Ještě širší kužel
             this.scene.add(this.keyLight);
             this.scene.add(this.keyLight.target);
 
@@ -428,12 +437,12 @@
             if (type < 0.6) {
                 const lane = Math.floor(Math.random() * 3);
                 geo = new this.THREE.BoxGeometry(this.LANE_WIDTH - 1, 8, 2);
-                mat = new this.THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.9, map: this.createTunnelTexture(), emissive: '#111111' });
+                mat = new this.THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.9, map: this.createTunnelTexture(), emissive: 0xFFD700, emissiveIntensity: 0.3 }); // Žluté pruhy
                 mesh = new this.THREE.Mesh(geo, mat);
                 mesh.position.set((lane - 1) * this.LANE_WIDTH, 3, zPos);
             } else {
                 geo = new this.THREE.CylinderGeometry(0.5, 0.5, this.LANE_WIDTH * 3.2, 16);
-                mat = new this.THREE.MeshStandardMaterial({ color: 0x8B4513, metalness: 0.8, roughness: 0.6, emissive: '#100500' });
+                mat = new this.THREE.MeshStandardMaterial({ color: 0x8B4513, metalness: 0.8, roughness: 0.6, emissive: 0xFF0000, emissiveIntensity: 0.5 }); // Červené
                 mesh = new this.THREE.Mesh(geo, mat);
                 mesh.rotation.z = Math.PI / 2; mesh.position.set(0, 0, zPos);
             }
@@ -444,7 +453,7 @@
             const lane = Math.floor(Math.random() * 3);
             const zPos = this.player.position.z - 150;
             const geo = new this.THREE.CylinderGeometry(0.1, 0.1, 0.8, 8);
-            const mat = new this.THREE.MeshPhongMaterial({ color: 0xffffff, emissive: 0x00AACC, emissiveIntensity: 2 });
+            const mat = new this.THREE.MeshPhongMaterial({ color: 0xffffff, emissive: 0x39FF14, emissiveIntensity: 2 }); // Zelená
             const mesh = new this.THREE.Mesh(geo, mat);
             mesh.rotation.x = Math.PI/2;
             mesh.position.set((lane - 1) * this.LANE_WIDTH, -0.4, zPos);
@@ -531,7 +540,13 @@
         onWindowResize() { if (!this.camera || !this.renderer) return; this.camera.aspect = window.innerWidth / window.innerHeight; this.camera.updateProjectionMatrix(); this.renderer.setSize(window.innerWidth, window.innerHeight); this.composer.setSize(window.innerWidth, window.innerHeight); }
         playSound(type) { if (!this.audio.sfxEnabled || !this.audio.context) return; const t = this.audio.context.currentTime; const o = this.audio.context.createOscillator(); const g = this.audio.context.createGain(); o.connect(g); g.connect(this.audio.context.destination); g.gain.setValueAtTime(0.2, t); switch(type) { case 'jump': o.frequency.setValueAtTime(300, t); o.frequency.exponentialRampToValueAtTime(600, t + 0.1); break; case 'dash': o.type = 'sawtooth'; o.frequency.setValueAtTime(600, t); o.frequency.exponentialRampToValueAtTime(100, t + 0.2); break; case 'collision': o.type = 'square'; o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.4); break; case 'powerup': o.frequency.setValueAtTime(600, t); o.frequency.exponentialRampToValueAtTime(1200, t+0.05); o.frequency.exponentialRampToValueAtTime(800, t+0.2); break; } g.gain.exponentialRampToValueAtTime(0.001, t + 0.3); o.start(t); o.stop(t + 0.4); }
         getRandomQuote(c) { const q = HLASKY_JSON[c]; return q ? q[Math.floor(Math.random() * q.length)] : ''; }
-        showQuote(c) { const t = this.getRandomQuote(c); if (!t) return; const qd=this.elements['quote-display']; const qt=this.elements['quote-text']; qt.textContent = t; qd.classList.add('active'); if (this.quoteTimeout) clearTimeout(this.quoteTimeout); this.quoteTimeout = setTimeout(() => { qd.classList.remove('active'); }, 2500); }
+        showQuote(c) { 
+            const t = this.getRandomQuote(c); if (!t) return; 
+            const qd=this.elements['quote-display']; const qt=this.elements['quote-text']; 
+            qt.textContent = t; qd.classList.add('active'); 
+            if (this.quoteTimeout) clearTimeout(this.quoteTimeout); 
+            this.quoteTimeout = setTimeout(() => { qd.classList.remove('active'); }, 3500); 
+        }
         
         analyzeRun() {
             const btn = this.elements['analyze-run-btn'];
@@ -548,7 +563,15 @@
         }
     }
 
-    window.onload = () => { new FofrPedro3DHardcore(); };
+    window.onload = () => {
+        // if ('serviceWorker' in navigator) {
+        //     navigator.serviceWorker.register('service-worker.js')
+        //         .then(reg => console.log('Service Worker zaregistrován.', reg))
+        //         .catch(err => console.error('Chyba registrace Service Workeru:', err));
+        // }
+
+        new FofrPedro3DHardcore();
+    };
     </script>
 </body>
 </html>
