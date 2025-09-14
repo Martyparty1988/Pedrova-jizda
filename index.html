@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
     <title>Pedrova jízda</title>
     <meta name="description" content="Procedurální underground runner s vlastním WebGL enginem.">
     <meta name="theme-color" content="#00AACC">
@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pedrova jízda">
-    <!-- <link rel="manifest" href="manifest.json"> -->
+    <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.svg">
     <link rel="icon" href="icon.svg" type="image/svg+xml">
 
@@ -86,7 +86,13 @@
         .cyber-btn:hover:not(:disabled) { transform: translateY(-4px); background-position: 100% 50%; box-shadow: 0 0 25px rgba(0, 191, 255, 0.7); }
 
         #game-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        .game-hud { position: fixed; top: 20px; left: 20px; right: 20px; z-index: 100; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
+        .game-hud { 
+            position: fixed; top: 0; left: 0; right: 0; 
+            z-index: 100; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none;
+            padding-top: env(safe-area-inset-top, 20px);
+            padding-left: env(safe-area-inset-left, 20px);
+            padding-right: env(safe-area-inset-right, 20px);
+        }
         .game-hud > * { pointer-events: all; }
 
         .hud-panel {
@@ -101,7 +107,7 @@
         #pause-btn { background: none; border: none; color: var(--text-glow); font-size: 2.2rem; padding: 5px; cursor: pointer; transition: all 0.2s ease; text-shadow: 0 0 10px var(--junkie-cyan); }
         #pause-btn:hover { transform: scale(1.15); color: var(--junkie-magenta); }
 
-        .quote-display { position: fixed; top: 90px; left: 50%; transform: translateX(-50%); z-index: 200; opacity: 0; transition: opacity 0.5s ease-in-out; pointer-events: none; }
+        .quote-display { position: fixed; top: 90px; left: 50%; transform: translateX(-50%); z-index: 200; opacity: 0; transition: opacity 0.5s ease-in-out; pointer-events: none; padding-top: env(safe-area-inset-top, 0); }
         .quote-display.active { opacity: 0.9; }
 
         .quote-text {
@@ -113,7 +119,12 @@
             max-width: 500px; box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
         }
         
-        .skill-indicator { position: fixed; bottom: 20px; left: 20px; z-index: 100; display: flex; gap: 10px; pointer-events: none; }
+        .skill-indicator { 
+            position: fixed; bottom: 0; left: 0;
+            z-index: 100; display: flex; gap: 10px; pointer-events: none; 
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+            padding-left: env(safe-area-inset-left, 20px);
+        }
         .skill-btn {
             background: rgba(10, 10, 10, 0.5); backdrop-filter: blur(10px); border: 1px solid var(--glass-border);
             border-radius: 12px; padding: 10px 15px; color: var(--text-dim); font-size: 1.2rem;
@@ -204,7 +215,7 @@
     </div>
 
     <script type="module">
-    const HLASKY_JSON = { "start": ["Třesou se mi ruce, ale musím běžet.", "Ještě jedna dávka a bude líp.", "Tohle je poslední jízda... fakt."], "jump": ["Přeskočit kaluž vlastní beznaděje.", "Skočím pro to, i kdybych měl padnout.", "Letím, i když mám křídla z popela."], "frontflip": ["Salto pro pár drobných.", "Tohle včera v deliriu vypadalo líp.", "Ještě se u toho stihnu poškrábat."], "slide": ["Sklouznout po dně, můj denní chleba.", "Podlézám další překážku života.", "Dole je špína, ale aspon je to jistota."], "collision": ["Narazil jsem. Zase.", "Konec? Nebo jen další probuzení do pekla?", "Světlo... to bude sanitka."], "gameover": ["Došlo zboží, došel dech.", "Padnul jsem. Zvedne mě někdo?", "Tentokrát to bylo na tvrdo."], "powerup": ["Jo! To je ono! Cítím to!", "Teď mě nic nezastaví! Nic!", "Konečně! Svět dává smysl!"] };
+    const HLASKY_JSON = { "start": ["Třesou se mi ruce, ale musím běžet.", "Ještě jedna dávka a bude líp.", "Tohle je poslední jízda... fakt."], "jump": ["Přeskočit kaluž vlastní beznaděje.", "Skočím pro to, i kdybych měl padnout.", "Letím, i když mám křídla z popela."], "frontflip": ["Salto pro pár drobných.", "Tohle včera v deliriu vypadalo líp.", "Ještě se u toho stihnu poškrábat."], "slide": ["Sklouznout po dně, můj denní chleba.", "Podlézám další překážku života.", "Dole je špína, ale aspoň je to jistota."], "collision": ["Narazil jsem. Zase.", "Konec? Nebo jen další probuzení do pekla?", "Světlo... to bude sanitka."], "gameover": ["Došlo zboží, došel dech.", "Padnul jsem. Zvedne mě někdo?", "Tentokrát to bylo na tvrdo."], "powerup": ["Jo! To je ono! Cítím to!", "Teď mě nic nezastaví! Nic!", "Konečně! Svět dává smysl!"] };
     const ANALYSIS_QUOTES = [ "Skóre nic moc, ale aspoň jsi běžel. Většina to vzdá už na startu.", "Celkem slušná jízda. Skoro jsi zapomněl, že jsi na dně. Skoro.", "Motal ses tam jak vítr v igelitce. Příště víc rovně a míň paniky.", "Hele, na to, v jakým jsi stavu, to nebylo špatný. Teď si dej pauzu, než se složíš.", "Viděl jsem krysy s lepším smyslem pro směr. Ale snaha se cení.", "Sbíral jsi to jak o život. Ta závislost tě jednou zabije... nebo ti nahraje rekord." ];
 
     class FofrPedro3DHardcore {
@@ -285,7 +296,7 @@
 
         setupWorld(Reflector) {
             this.scene.fog = new this.THREE.Fog(0x101015, 15, 80);
-            this.scene.add(new this.THREE.AmbientLight(0x404040, 2.5)); // Zvýšená intenzita ambientního světla
+            this.scene.add(new this.THREE.AmbientLight(0x404040, 1.5));
 
             const playerGroup = new this.THREE.Group();
             const coreGeo = new this.THREE.SphereGeometry(0.2, 16, 8);
@@ -313,7 +324,7 @@
             this.floor = new Reflector(floorGeo, { clipBias: 0.003, textureWidth: window.innerWidth * window.devicePixelRatio, textureHeight: window.innerHeight * window.devicePixelRatio, color: 0x222222 });
             this.floor.rotation.x = -Math.PI / 2; this.floor.position.y = -1; this.scene.add(this.floor);
             
-            this.keyLight = new this.THREE.SpotLight(0xffffff, 2.0, 100, Math.PI / 3.5, 0.8); // Ještě širší kužel
+            this.keyLight = new this.THREE.SpotLight(0xffffff, 2.0, 100, Math.PI / 4, 0.8);
             this.scene.add(this.keyLight);
             this.scene.add(this.keyLight.target);
 
@@ -474,6 +485,7 @@
         }
         
         collectPowerup(index) {
+            this.vibrate(50);
             const obj = this.gameObjects[index];
             this.scene.remove(obj.mesh); obj.mesh.geometry.dispose(); obj.mesh.material.dispose();
             this.gameObjects.splice(index, 1);
@@ -499,6 +511,7 @@
 
         gameOver() {
             if (!this.gameState.isPlaying) return;
+            this.vibrate([100, 50, 100]);
             this.gameState.isPlaying = false; this.playSound('collision'); this.showQuote('collision');
             this.lastRunStats = { score: this.gameState.score, time: ((Date.now() - this.gameState.startTime) / 1000).toFixed(1), ...this.gameState.runStats };
             this.elements['final-score'].textContent = this.lastRunStats.score; this.elements['game-time'].textContent = this.lastRunStats.time + 's';
@@ -534,7 +547,7 @@
             else if (this.gameState.jumpCount < 2 && this.skills.doubleJump.unlocked && this.skills.doubleJump.cooldown <= 0) { this.gameState.playerVelocityY = this.JUMP_FORCE * 0.9; this.gameState.jumpCount = 2; this.skills.doubleJump.cooldown = this.skills.doubleJump.duration; this.updateSkillUI(); this.gameState.runStats.jumps++; this.playSound('jump'); this.showQuote('frontflip'); }
         }
 
-        doDash() { if (!this.gameState.isDashing && this.skills.dash.unlocked && this.skills.dash.cooldown <= 0) { this.gameState.isDashing = true; this.skills.dash.cooldown = this.skills.dash.duration; this.updateSkillUI(); this.gameState.runStats.dashes++; this.playSound('dash'); this.showQuote('slide'); setTimeout(() => this.gameState.isDashing = false, 300); } }
+        doDash() { if (!this.gameState.isDashing && this.skills.dash.unlocked && this.skills.dash.cooldown <= 0) { this.vibrate(75); this.gameState.isDashing = true; this.skills.dash.cooldown = this.skills.dash.duration; this.updateSkillUI(); this.gameState.runStats.dashes++; this.playSound('dash'); this.showQuote('slide'); setTimeout(() => this.gameState.isDashing = false, 300); } }
         updateSkillUI() { for (const [s,d] of Object.entries(this.skills)) { const e = this.elements[`skill-${s}`]; if (!e) continue; e.classList.toggle('unlocked', d.unlocked); e.classList.toggle('cooldown', d.cooldown > 0); } }
         togglePause() { if (!this.gameState.isPlaying) return; this.gameState.isPaused = !this.gameState.isPaused; this.elements['pause-btn'].innerHTML = this.gameState.isPaused ? '▶' : '||'; }
         onWindowResize() { if (!this.camera || !this.renderer) return; this.camera.aspect = window.innerWidth / window.innerHeight; this.camera.updateProjectionMatrix(); this.renderer.setSize(window.innerWidth, window.innerHeight); this.composer.setSize(window.innerWidth, window.innerHeight); }
@@ -561,14 +574,20 @@
                 this.elements['ai-summary-spinner'].style.display = 'none';
             }, 1000);
         }
+
+        vibrate(pattern) {
+            if ('vibrate' in navigator) {
+                navigator.vibrate(pattern);
+            }
+        }
     }
 
     window.onload = () => {
-        // if ('serviceWorker' in navigator) {
-        //     navigator.serviceWorker.register('service-worker.js')
-        //         .then(reg => console.log('Service Worker zaregistrován.', reg))
-        //         .catch(err => console.error('Chyba registrace Service Workeru:', err));
-        // }
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(reg => console.log('Service Worker zaregistrován.', reg))
+                .catch(err => console.error('Chyba registrace Service Workeru:', err));
+        }
 
         new FofrPedro3DHardcore();
     };
