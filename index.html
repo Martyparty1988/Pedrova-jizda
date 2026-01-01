@@ -223,6 +223,12 @@
             this.elements = {}; this.gameState = {}; this.lastRunStats = {}; this.audio = { context: null, sfxEnabled: true };
             this.skills = { doubleJump: { unlocked: false, cooldown: 0, duration: 2000 }, dash: { unlocked: false, cooldown: 0, duration: 5000 } };
             this.quoteTimeout = null; this.JUMP_FORCE = 16; this.GRAVITY = -45; this.LANE_WIDTH = 4;
+            
+            // Materials cache
+            this.boxMaterial = null;
+            this.cylinderMaterial = null;
+            this.powerupMaterial = null;
+            
             this.init();
         }
 
@@ -312,13 +318,39 @@
             this.player = playerGroup;
             this.scene.add(this.player);
 
+            // OPTIMIZATION: Create texture once and reuse it
+            const sharedTunnelTex = this.createTunnelTexture();
+            sharedTunnelTex.wrapS = sharedTunnelTex.wrapT = this.THREE.RepeatWrapping;
+
             const tubePath = new this.THREE.LineCurve3(new this.THREE.Vector3(0,0,0), new this.THREE.Vector3(0,0,-200));
             const tubeGeo = new this.THREE.TubeGeometry(tubePath, 12, 8, 8, false);
-            const tubeTex = this.createTunnelTexture();
-            tubeTex.wrapS = tubeTex.wrapT = this.THREE.RepeatWrapping;
-            const tubeMat = new this.THREE.MeshStandardMaterial({ map: tubeTex, side: this.THREE.BackSide, roughness: 0.8, metalness: 0.2 });
+            // Use shared texture
+            const tubeMat = new this.THREE.MeshStandardMaterial({ map: sharedTunnelTex, side: this.THREE.BackSide, roughness: 0.8, metalness: 0.2 });
             this.tunnel = new this.THREE.Mesh(tubeGeo, tubeMat);
             this.scene.add(this.tunnel);
+
+            // OPTIMIZATION: Initialize shared materials
+            this.boxMaterial = new this.THREE.MeshStandardMaterial({ 
+                color: 0x808080, 
+                roughness: 0.9, 
+                map: sharedTunnelTex, // Reuse the heavy texture
+                emissive: 0xFFD700, 
+                emissiveIntensity: 0.3 
+            });
+
+            this.cylinderMaterial = new this.THREE.MeshStandardMaterial({ 
+                color: 0x8B4513, 
+                metalness: 0.8, 
+                roughness: 0.6, 
+                emissive: 0xFF0000, 
+                emissiveIntensity: 0.5 
+            });
+
+            this.powerupMaterial = new this.THREE.MeshPhongMaterial({ 
+                color: 0xffffff, 
+                emissive: 0x39FF14, 
+                emissiveIntensity: 2 
+            });
 
             const floorGeo = new this.THREE.PlaneGeometry(30, 200);
             this.floor = new Reflector(floorGeo, { clipBias: 0.003, textureWidth: window.innerWidth * window.devicePixelRatio, textureHeight: window.innerHeight * window.devicePixelRatio, color: 0x222222 });
@@ -382,7 +414,12 @@
             this.skills.doubleJump.unlocked = true; this.skills.dash.unlocked = true;
             this.skills.doubleJump.cooldown = 0; this.skills.dash.cooldown = 0;
             this.updateSkillUI();
-            this.gameObjects.forEach(o => { this.scene.remove(o.mesh); o.mesh.geometry.dispose(); o.mesh.material.dispose(); });
+            // OPTIMIZATION: Only dispose geometry, keep materials
+            this.gameObjects.forEach(o => { 
+                this.scene.remove(o.mesh); 
+                o.mesh.geometry.dispose(); 
+                // Do NOT dispose shared materials here
+            });
             this.gameObjects = []; this.lastSpawnZ = 0; this.player.position.set(0, this.gameState.playerY, 0); this.camera.position.set(0, 4, 10);
             this.elements['ai-summary-container'].style.display = 'none';
             this.elements['analyze-run-btn'].style.display = 'block';
@@ -443,32 +480,37 @@
         }
 
         spawnObstacle() {
-            const type = Math.random(); let mesh, geo, mat;
+            const type = Math.random(); 
+            let mesh, geo; // Removed mat declaration
             const zPos = this.player.position.z - 150;
+            
             if (type < 0.6) {
                 const lane = Math.floor(Math.random() * 3);
                 geo = new this.THREE.BoxGeometry(this.LANE_WIDTH - 1, 8, 2);
-                mat = new this.THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.9, map: this.createTunnelTexture(), emissive: 0xFFD700, emissiveIntensity: 0.3 }); // Žluté pruhy
-                mesh = new this.THREE.Mesh(geo, mat);
+                // OPTIMIZATION: Use shared material
+                mesh = new this.THREE.Mesh(geo, this.boxMaterial);
                 mesh.position.set((lane - 1) * this.LANE_WIDTH, 3, zPos);
             } else {
                 geo = new this.THREE.CylinderGeometry(0.5, 0.5, this.LANE_WIDTH * 3.2, 16);
-                mat = new this.THREE.MeshStandardMaterial({ color: 0x8B4513, metalness: 0.8, roughness: 0.6, emissive: 0xFF0000, emissiveIntensity: 0.5 }); // Červené
-                mesh = new this.THREE.Mesh(geo, mat);
-                mesh.rotation.z = Math.PI / 2; mesh.position.set(0, 0, zPos);
+                // OPTIMIZATION: Use shared material
+                mesh = new this.THREE.Mesh(geo, this.cylinderMaterial);
+                mesh.rotation.z = Math.PI / 2; 
+                mesh.position.set(0, 0, zPos);
             }
-            this.scene.add(mesh); this.gameObjects.push({ mesh, type: 'obstacle' });
+            this.scene.add(mesh); 
+            this.gameObjects.push({ mesh, type: 'obstacle' });
         }
 
         spawnPowerup() {
             const lane = Math.floor(Math.random() * 3);
             const zPos = this.player.position.z - 150;
             const geo = new this.THREE.CylinderGeometry(0.1, 0.1, 0.8, 8);
-            const mat = new this.THREE.MeshPhongMaterial({ color: 0xffffff, emissive: 0x39FF14, emissiveIntensity: 2 }); // Zelená
-            const mesh = new this.THREE.Mesh(geo, mat);
+            // OPTIMIZATION: Use shared material
+            const mesh = new this.THREE.Mesh(geo, this.powerupMaterial);
             mesh.rotation.x = Math.PI/2;
             mesh.position.set((lane - 1) * this.LANE_WIDTH, -0.4, zPos);
-            this.scene.add(mesh); this.gameObjects.push({ mesh, type: 'powerup' });
+            this.scene.add(mesh); 
+            this.gameObjects.push({ mesh, type: 'powerup' });
         }
 
         checkCollisions() {
@@ -487,7 +529,9 @@
         collectPowerup(index) {
             this.vibrate(50);
             const obj = this.gameObjects[index];
-            this.scene.remove(obj.mesh); obj.mesh.geometry.dispose(); obj.mesh.material.dispose();
+            this.scene.remove(obj.mesh); 
+            obj.mesh.geometry.dispose(); 
+            // OPTIMIZATION: Do not dispose shared material
             this.gameObjects.splice(index, 1);
             this.playSound('powerup'); this.showQuote('powerup');
             this.gameState.score += 500; this.gameState.runStats.powerups++;
@@ -502,7 +546,9 @@
             for (let i = this.gameObjects.length - 1; i >= 0; i--) {
                 const obj = this.gameObjects[i];
                 if (obj.mesh.position.z > this.camera.position.z + 10) {
-                    this.scene.remove(obj.mesh); obj.mesh.geometry.dispose(); obj.mesh.material.dispose();
+                    this.scene.remove(obj.mesh); 
+                    obj.mesh.geometry.dispose(); 
+                    // OPTIMIZATION: Do not dispose shared material
                     if (obj.type === 'obstacle') this.gameState.runStats.obstaclesDodged++;
                     this.gameObjects.splice(i, 1);
                 }
