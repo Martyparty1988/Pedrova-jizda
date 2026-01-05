@@ -147,6 +147,72 @@
         .webgl-fallback.active { display: flex; }
         .webgl-fallback p { margin-top: 15px; line-height: 1.6; color: var(--text-dim); }
         .webgl-fallback ul { text-align: left; margin: 20px auto; max-width: 350px; color: var(--text-dim); }
+
+        /* Combo Indicator */
+        .combo-indicator {
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+            z-index: 150; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+            padding-top: env(safe-area-inset-top, 0);
+        }
+        .combo-indicator.active { opacity: 1; }
+        .combo-text {
+            background: rgba(255, 215, 0, 0.15); backdrop-filter: blur(10px);
+            border: 2px solid var(--junkie-yellow); border-radius: 16px;
+            padding: 8px 20px; font-size: 1.8rem; font-weight: 600;
+            color: var(--junkie-yellow); text-shadow: 0 0 15px var(--junkie-yellow);
+            animation: pulse 0.5s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+        /* Install Prompt */
+        .install-prompt {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 300; opacity: 0; transition: opacity 0.5s; pointer-events: none;
+            padding-bottom: env(safe-area-inset-bottom, 0);
+        }
+        .install-prompt.active { opacity: 1; pointer-events: all; }
+        .install-banner {
+            background: var(--glass-secondary); backdrop-filter: blur(15px);
+            border: 1px solid var(--junkie-cyan); border-radius: 16px;
+            padding: 15px 20px; display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 8px 30px rgba(0, 191, 255, 0.3);
+        }
+        .install-close { background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer; }
+        .install-btn-small { background: linear-gradient(135deg, var(--junkie-cyan), var(--junkie-magenta));
+            border: none; border-radius: 8px; padding: 8px 16px; color: #fff;
+            font-family: 'Teko', sans-serif; font-size: 1.2rem; cursor: pointer; }
+
+        /* Orientation Warning */
+        .orientation-warning {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dark-concrete); z-index: 9998; display: none;
+            justify-content: center; align-items: center; flex-direction: column; padding: 20px;
+        }
+        .orientation-warning.active { display: flex; }
+        .orientation-icon { font-size: 5rem; margin-bottom: 20px; animation: rotate-phone 1.5s ease-in-out infinite; }
+        @keyframes rotate-phone { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } }
+
+        /* Update Notification */
+        .update-notification {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 400; opacity: 0; transition: opacity 0.5s; pointer-events: none;
+            padding-top: env(safe-area-inset-top, 20px);
+        }
+        .update-notification.active { opacity: 1; pointer-events: all; }
+        .update-banner {
+            background: var(--glass-secondary); backdrop-filter: blur(15px);
+            border: 1px solid var(--junkie-magenta); border-radius: 12px;
+            padding: 12px 20px; box-shadow: 0 4px 20px rgba(255, 0, 127, 0.3);
+        }
+
+        /* Touch Feedback */
+        .touch-feedback {
+            position: fixed; width: 80px; height: 80px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 191, 255, 0.4), transparent);
+            pointer-events: none; z-index: 50; opacity: 0;
+            transition: opacity 0.3s; transform: translate(-50%, -50%);
+        }
+        .touch-feedback.active { opacity: 1; }
     </style>
 </head>
 <body>
@@ -164,6 +230,7 @@
             <h1 class="cyber-title">PEDROVA JÍZDA</h1>
             <div class="subtitle">Stoky volají</div>
             <button class="cyber-btn" id="play-btn">💉 DÁT SI</button>
+            <button class="cyber-btn" id="install-btn" style="display: none;">📱 NAINSTALOVAT</button>
         </div>
     </div>
 
@@ -214,6 +281,38 @@
         </div>
     </div>
 
+    <!-- Combo Indicator -->
+    <div id="combo-indicator" class="combo-indicator">
+        <div class="combo-text" id="combo-text">COMBO x0</div>
+    </div>
+
+    <!-- Touch Feedback -->
+    <div id="touch-feedback" class="touch-feedback"></div>
+
+    <!-- Orientation Warning -->
+    <div id="orientation-warning" class="orientation-warning">
+        <div class="orientation-icon">📱</div>
+        <h2 style="color: var(--junkie-cyan); margin-bottom: 10px;">Otoč telefon</h2>
+        <p style="color: var(--text-dim); text-align: center;">Pro nejlepší zážitek hraj na šířku</p>
+    </div>
+
+    <!-- Install Prompt Banner -->
+    <div id="install-prompt" class="install-prompt">
+        <div class="install-banner">
+            <button class="install-close" id="install-close">✕</button>
+            <span style="color: var(--text-cyber);">Nainstaluj si hru pro offline hrání!</span>
+            <button class="install-btn-small" id="install-prompt-btn">Nainstalovat</button>
+        </div>
+    </div>
+
+    <!-- Update Notification -->
+    <div id="update-notification" class="update-notification">
+        <div class="update-banner">
+            <span style="color: var(--text-cyber);">Nová verze je k dispozici!</span>
+            <button class="install-btn-small" id="update-btn" style="margin-left: 10px;">Aktualizovat</button>
+        </div>
+    </div>
+
     <script type="module">
     const HLASKY_JSON = { "start": ["Třesou se mi ruce, ale musím běžet.", "Ještě jedna dávka a bude líp.", "Tohle je poslední jízda... fakt."], "jump": ["Přeskočit kaluž vlastní beznaděje.", "Skočím pro to, i kdybych měl padnout.", "Letím, i když mám křídla z popela."], "frontflip": ["Salto pro pár drobných.", "Tohle včera v deliriu vypadalo líp.", "Ještě se u toho stihnu poškrábat."], "slide": ["Sklouznout po dně, můj denní chleba.", "Podlézám další překážku života.", "Dole je špína, ale aspoň je to jistota."], "collision": ["Narazil jsem. Zase.", "Konec? Nebo jen další probuzení do pekla?", "Světlo... to bude sanitka."], "gameover": ["Došlo zboží, došel dech.", "Padnul jsem. Zvedne mě někdo?", "Tentokrát to bylo na tvrdo."], "powerup": ["Jo! To je ono! Cítím to!", "Teď mě nic nezastaví! Nic!", "Konečně! Svět dává smysl!"] };
     const ANALYSIS_QUOTES = [ "Skóre nic moc, ale aspoň jsi běžel. Většina to vzdá už na startu.", "Celkem slušná jízda. Skoro jsi zapomněl, že jsi na dně. Skoro.", "Motal ses tam jak vítr v igelitce. Příště víc rovně a míň paniky.", "Hele, na to, v jakým jsi stavu, to nebylo špatný. Teď si dej pauzu, než se složíš.", "Viděl jsem krysy s lepším smyslem pro směr. Ale snaha se cení.", "Sbíral jsi to jak o život. Ta závislost tě jednou zabije... nebo ti nahraje rekord." ];
@@ -232,11 +331,28 @@
             // Safari/iOS detection for performance optimization
             this.isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
+            // Object pooling
+            this.objectPool = { obstacles: [], powerups: [], maxSize: 20 };
+
+            // Combo system
+            this.combo = { count: 0, timer: null, timeout: 3000 };
+
+            // Screen shake
+            this.screenShake = { intensity: 0, duration: 0 };
+
+            // Particles
+            this.particles = [];
+
+            // PWA Install
+            this.deferredPrompt = null;
+
             this.init();
         }
 
         async init() {
             this.getDOMElements();
+            this.setupPWAHandlers();
+            this.checkOrientation();
             try {
                 this.elements['loading-text'].textContent = 'Míchám matroš...';
                 await this.initThreeEngine();
@@ -255,7 +371,7 @@
         showWebGLFallback() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); this.elements['webgl-fallback'].classList.add('active'); }
 
         getDOMElements() {
-            const ids = ['loading-screen', 'main-menu', 'game-screen', 'game-over', 'play-btn', 'restart-btn', 'menu-btn', 'game-canvas', 'current-score', 'final-score', 'best-score', 'game-time', 'pause-btn', 'skill-doubleJump', 'skill-dash', 'loading-text', 'ai-summary-container', 'ai-summary-spinner', 'ai-summary-text', 'analyze-run-btn', 'quote-display', 'quote-text', 'game-over-quote', 'webgl-fallback'];
+            const ids = ['loading-screen', 'main-menu', 'game-screen', 'game-over', 'play-btn', 'restart-btn', 'menu-btn', 'game-canvas', 'current-score', 'final-score', 'best-score', 'game-time', 'pause-btn', 'skill-doubleJump', 'skill-dash', 'loading-text', 'ai-summary-container', 'ai-summary-spinner', 'ai-summary-text', 'analyze-run-btn', 'quote-display', 'quote-text', 'game-over-quote', 'webgl-fallback', 'combo-indicator', 'combo-text', 'touch-feedback', 'orientation-warning', 'install-prompt', 'install-btn', 'install-prompt-btn', 'install-close', 'update-notification', 'update-btn'];
             ids.forEach(id => this.elements[id] = document.getElementById(id));
         }
 
@@ -427,11 +543,169 @@
             this.elements['menu-btn'].addEventListener('click', () => this.showScreen('main-menu'));
             this.elements['pause-btn'].addEventListener('click', () => this.togglePause());
             this.elements['analyze-run-btn'].addEventListener('click', () => this.analyzeRun());
+            if (this.elements['install-close']) this.elements['install-close'].addEventListener('click', () => this.dismissInstallPrompt());
+            if (this.elements['install-prompt-btn']) this.elements['install-prompt-btn'].addEventListener('click', () => this.installPWA());
+            if (this.elements['install-btn']) this.elements['install-btn'].addEventListener('click', () => this.installPWA());
+            if (this.elements['update-btn']) this.elements['update-btn'].addEventListener('click', () => this.updateApp());
             window.addEventListener('resize', () => this.onWindowResize());
+            window.addEventListener('orientationchange', () => this.checkOrientation());
             document.addEventListener('keydown', (e) => this.handleInput('keydown', e));
             const c=this.elements['game-canvas'];
-            c.addEventListener('touchstart', (e) => this.handleInput('touchstart', e), { passive: false });
+            c.addEventListener('touchstart', (e) => { this.showTouchFeedback(e); this.handleInput('touchstart', e); }, { passive: false });
             c.addEventListener('touchend', (e) => this.handleInput('touchend', e), { passive: false });
+        }
+
+        setupPWAHandlers() {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                this.deferredPrompt = e;
+                if (this.elements['install-btn']) this.elements['install-btn'].style.display = 'block';
+                if (this.elements['install-prompt']) {
+                    setTimeout(() => this.elements['install-prompt'].classList.add('active'), 5000);
+                }
+            });
+
+            window.addEventListener('appinstalled', () => {
+                this.deferredPrompt = null;
+                if (this.elements['install-prompt']) this.elements['install-prompt'].classList.remove('active');
+                if (this.elements['install-btn']) this.elements['install-btn'].style.display = 'none';
+            });
+        }
+
+        installPWA() {
+            if (!this.deferredPrompt) return;
+            this.deferredPrompt.prompt();
+            this.deferredPrompt.userChoice.then((choiceResult) => {
+                this.deferredPrompt = null;
+                if (this.elements['install-prompt']) this.elements['install-prompt'].classList.remove('active');
+            });
+        }
+
+        dismissInstallPrompt() {
+            if (this.elements['install-prompt']) this.elements['install-prompt'].classList.remove('active');
+            localStorage.setItem('install-dismissed', Date.now());
+        }
+
+        updateApp() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistration().then(reg => {
+                    if (reg && reg.waiting) {
+                        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        window.location.reload();
+                    }
+                });
+            }
+        }
+
+        checkOrientation() {
+            if (this.isIOS || window.innerWidth < 768) {
+                const isPortrait = window.innerHeight > window.innerWidth;
+                if (this.elements['orientation-warning']) {
+                    if (isPortrait && this.gameState.isPlaying) {
+                        this.elements['orientation-warning'].classList.add('active');
+                    } else {
+                        this.elements['orientation-warning'].classList.remove('active');
+                    }
+                }
+            }
+        }
+
+        showTouchFeedback(e) {
+            if (!e.touches || !this.elements['touch-feedback']) return;
+            const touch = e.touches[0];
+            const feedback = this.elements['touch-feedback'];
+            feedback.style.left = touch.clientX + 'px';
+            feedback.style.top = touch.clientY + 'px';
+            feedback.classList.add('active');
+            setTimeout(() => feedback.classList.remove('active'), 300);
+        }
+
+        addCombo() {
+            this.combo.count++;
+            if (this.combo.timer) clearTimeout(this.combo.timer);
+
+            const bonusMultiplier = Math.min(this.combo.count, 10);
+            this.gameState.score += 100 * bonusMultiplier;
+
+            if (this.elements['combo-text']) {
+                this.elements['combo-text'].textContent = `COMBO x${this.combo.count}`;
+                this.elements['combo-indicator'].classList.add('active');
+            }
+
+            this.combo.timer = setTimeout(() => {
+                this.combo.count = 0;
+                if (this.elements['combo-indicator']) {
+                    this.elements['combo-indicator'].classList.remove('active');
+                }
+            }, this.combo.timeout);
+        }
+
+        triggerScreenShake(intensity = 0.5, duration = 200) {
+            this.screenShake.intensity = intensity;
+            this.screenShake.duration = duration;
+        }
+
+        applyScreenShake() {
+            if (this.screenShake.duration > 0) {
+                const shake = this.screenShake.intensity;
+                this.camera.position.x += (Math.random() - 0.5) * shake;
+                this.camera.position.y += (Math.random() - 0.5) * shake;
+                this.screenShake.duration -= 16;
+            }
+        }
+
+        createParticle(position, color = 0x00BFFF) {
+            if (!this.THREE || this.particles.length > 50) return;
+
+            const geo = new this.THREE.SphereGeometry(0.1, 4, 4);
+            const mat = new this.THREE.MeshBasicMaterial({ color });
+            const particle = new this.THREE.Mesh(geo, mat);
+            particle.position.copy(position);
+            particle.velocity = new this.THREE.Vector3(
+                (Math.random() - 0.5) * 2,
+                Math.random() * 3,
+                (Math.random() - 0.5) * 2
+            );
+            particle.life = 1.0;
+            this.scene.add(particle);
+            this.particles.push(particle);
+        }
+
+        updateParticles(delta) {
+            for (let i = this.particles.length - 1; i >= 0; i--) {
+                const p = this.particles[i];
+                p.life -= delta * 2;
+                if (p.life <= 0) {
+                    this.scene.remove(p);
+                    p.geometry.dispose();
+                    p.material.dispose();
+                    this.particles.splice(i, 1);
+                } else {
+                    p.position.add(p.velocity.clone().multiplyScalar(delta));
+                    p.velocity.y -= 9.8 * delta;
+                    p.material.opacity = p.life;
+                    p.material.transparent = true;
+                }
+            }
+        }
+
+        getFromPool(type) {
+            const pool = this.objectPool[type];
+            if (pool.length > 0) {
+                return pool.pop();
+            }
+            return null;
+        }
+
+        returnToPool(obj, type) {
+            const pool = this.objectPool[type];
+            if (pool.length < this.objectPool.maxSize) {
+                obj.mesh.visible = false;
+                pool.push(obj);
+            } else {
+                this.scene.remove(obj.mesh);
+                obj.mesh.geometry.dispose();
+            }
         }
 
         startGame() {
@@ -467,7 +741,9 @@
         
         update(delta) {
             const s = this.gameState;
-            s.speed = Math.min(s.maxSpeed, s.baseSpeed + (Date.now() - s.startTime) / 2500);
+            // Improved difficulty progression
+            const timePlayed = (Date.now() - s.startTime) / 1000;
+            s.speed = Math.min(s.maxSpeed, s.baseSpeed + timePlayed * 0.5);
             s.score += Math.floor(s.speed * delta * 10);
             this.elements['current-score'].textContent = s.score;
             if (s.playerY > -0.6 || s.playerVelocityY !== 0) {
@@ -482,13 +758,20 @@
             this.player.position.z -= moveZ;
             this.tunnel.material.map.offset.y -= moveZ * 0.005;
             this.lastSpawnZ += moveZ;
-            if (this.lastSpawnZ > (600 / s.speed)) { this.spawnObject(); this.lastSpawnZ = 0; }
+            // Spawn more frequently as difficulty increases
+            const spawnThreshold = Math.max(300, 600 - timePlayed * 5) / s.speed;
+            if (this.lastSpawnZ > spawnThreshold) { this.spawnObject(); this.lastSpawnZ = 0; }
             Object.values(this.skills).forEach(sk => { if (sk.cooldown > 0) { sk.cooldown -= delta * 1000; if(sk.cooldown <= 0) this.updateSkillUI(); }});
             this.checkCollisions(); this.cleanupObjects();
+
+            // Update particles and screen shake
+            this.updateParticles(delta);
+            this.applyScreenShake();
+
             this.camera.position.x += (this.player.position.x * 0.5 - this.camera.position.x) * 0.1;
             this.camera.position.y += (this.player.position.y + 3 - this.camera.position.y) * 0.1;
             this.camera.position.z = this.player.position.z + 10;
-            
+
             this.keyLight.position.set( this.player.position.x, this.player.position.y + 5, this.player.position.z + 5 );
             this.keyLight.target.position.set( this.player.position.x, this.player.position.y, this.player.position.z - 50 );
             this.keyLight.target.updateMatrixWorld();
@@ -506,37 +789,61 @@
         }
 
         spawnObstacle() {
-            const type = Math.random(); 
-            let mesh, geo; // Removed mat declaration
+            const type = Math.random();
+            let obj = this.getFromPool('obstacles');
+            let mesh, geo;
             const zPos = this.player.position.z - 150;
-            
-            if (type < 0.6) {
-                const lane = Math.floor(Math.random() * 3);
-                geo = new this.THREE.BoxGeometry(this.LANE_WIDTH - 1, 8, 2);
-                // OPTIMIZATION: Use shared material
-                mesh = new this.THREE.Mesh(geo, this.boxMaterial);
-                mesh.position.set((lane - 1) * this.LANE_WIDTH, 3, zPos);
+
+            if (!obj) {
+                // Create new if pool is empty
+                if (type < 0.6) {
+                    const lane = Math.floor(Math.random() * 3);
+                    geo = new this.THREE.BoxGeometry(this.LANE_WIDTH - 1, 8, 2);
+                    mesh = new this.THREE.Mesh(geo, this.boxMaterial);
+                    mesh.position.set((lane - 1) * this.LANE_WIDTH, 3, zPos);
+                } else {
+                    geo = new this.THREE.CylinderGeometry(0.5, 0.5, this.LANE_WIDTH * 3.2, 16);
+                    mesh = new this.THREE.Mesh(geo, this.cylinderMaterial);
+                    mesh.rotation.z = Math.PI / 2;
+                    mesh.position.set(0, 0, zPos);
+                }
+                obj = { mesh, type: 'obstacle' };
+                this.scene.add(mesh);
             } else {
-                geo = new this.THREE.CylinderGeometry(0.5, 0.5, this.LANE_WIDTH * 3.2, 16);
-                // OPTIMIZATION: Use shared material
-                mesh = new this.THREE.Mesh(geo, this.cylinderMaterial);
-                mesh.rotation.z = Math.PI / 2; 
-                mesh.position.set(0, 0, zPos);
+                // Reuse from pool
+                mesh = obj.mesh;
+                mesh.visible = true;
+                if (type < 0.6) {
+                    const lane = Math.floor(Math.random() * 3);
+                    mesh.position.set((lane - 1) * this.LANE_WIDTH, 3, zPos);
+                } else {
+                    mesh.position.set(0, 0, zPos);
+                }
+                this.scene.add(mesh);
             }
-            this.scene.add(mesh); 
-            this.gameObjects.push({ mesh, type: 'obstacle' });
+            this.gameObjects.push(obj);
         }
 
         spawnPowerup() {
             const lane = Math.floor(Math.random() * 3);
             const zPos = this.player.position.z - 150;
-            const geo = new this.THREE.CylinderGeometry(0.1, 0.1, 0.8, 8);
-            // OPTIMIZATION: Use shared material
-            const mesh = new this.THREE.Mesh(geo, this.powerupMaterial);
-            mesh.rotation.x = Math.PI/2;
-            mesh.position.set((lane - 1) * this.LANE_WIDTH, -0.4, zPos);
-            this.scene.add(mesh); 
-            this.gameObjects.push({ mesh, type: 'powerup' });
+            let obj = this.getFromPool('powerups');
+
+            if (!obj) {
+                // Create new if pool is empty
+                const geo = new this.THREE.CylinderGeometry(0.1, 0.1, 0.8, 8);
+                const mesh = new this.THREE.Mesh(geo, this.powerupMaterial);
+                mesh.rotation.x = Math.PI/2;
+                mesh.position.set((lane - 1) * this.LANE_WIDTH, -0.4, zPos);
+                obj = { mesh, type: 'powerup' };
+                this.scene.add(mesh);
+            } else {
+                // Reuse from pool
+                obj.mesh.visible = true;
+                obj.mesh.position.set((lane - 1) * this.LANE_WIDTH, -0.4, zPos);
+                this.scene.add(obj.mesh);
+            }
+            this.gameObjects.push(obj);
         }
 
         checkCollisions() {
@@ -555,10 +862,19 @@
         collectPowerup(index) {
             this.vibrate(50);
             const obj = this.gameObjects[index];
-            this.scene.remove(obj.mesh); 
-            obj.mesh.geometry.dispose(); 
-            // OPTIMIZATION: Do not dispose shared material
+
+            // Create particles at powerup location
+            for (let i = 0; i < 8; i++) {
+                this.createParticle(obj.mesh.position.clone(), 0x39FF14);
+            }
+
+            // Add combo
+            this.addCombo();
+
+            // Return to pool instead of disposing
+            this.returnToPool(obj, 'powerups');
             this.gameObjects.splice(index, 1);
+
             this.playSound('powerup'); this.showQuote('powerup');
             this.gameState.score += 500; this.gameState.runStats.powerups++;
             this.gameState.baseSpeed += 1;
@@ -572,10 +888,12 @@
             for (let i = this.gameObjects.length - 1; i >= 0; i--) {
                 const obj = this.gameObjects[i];
                 if (obj.mesh.position.z > this.camera.position.z + 10) {
-                    this.scene.remove(obj.mesh); 
-                    obj.mesh.geometry.dispose(); 
-                    // OPTIMIZATION: Do not dispose shared material
-                    if (obj.type === 'obstacle') this.gameState.runStats.obstaclesDodged++;
+                    // Return to pool instead of disposing
+                    this.returnToPool(obj, obj.type === 'obstacle' ? 'obstacles' : 'powerups');
+                    if (obj.type === 'obstacle') {
+                        this.gameState.runStats.obstaclesDodged++;
+                        this.addCombo(); // Add combo for dodging obstacles
+                    }
                     this.gameObjects.splice(i, 1);
                 }
             }
@@ -584,6 +902,13 @@
         gameOver() {
             if (!this.gameState.isPlaying) return;
             this.vibrate([100, 50, 100]);
+
+            // Screen shake and particles on collision
+            this.triggerScreenShake(1.5, 500);
+            for (let i = 0; i < 15; i++) {
+                this.createParticle(this.player.position.clone(), 0xFF0000);
+            }
+
             this.gameState.isPlaying = false; this.playSound('collision'); this.showQuote('collision');
             this.lastRunStats = { score: this.gameState.score, time: ((Date.now() - this.gameState.startTime) / 1000).toFixed(1), ...this.gameState.runStats };
             this.elements['final-score'].textContent = this.lastRunStats.score; this.elements['game-time'].textContent = this.lastRunStats.time + 's';
@@ -619,7 +944,19 @@
             else if (this.gameState.jumpCount < 2 && this.skills.doubleJump.unlocked && this.skills.doubleJump.cooldown <= 0) { this.gameState.playerVelocityY = this.JUMP_FORCE * 0.9; this.gameState.jumpCount = 2; this.skills.doubleJump.cooldown = this.skills.doubleJump.duration; this.updateSkillUI(); this.gameState.runStats.jumps++; this.playSound('jump'); this.showQuote('frontflip'); }
         }
 
-        doDash() { if (!this.gameState.isDashing && this.skills.dash.unlocked && this.skills.dash.cooldown <= 0) { this.vibrate(75); this.gameState.isDashing = true; this.skills.dash.cooldown = this.skills.dash.duration; this.updateSkillUI(); this.gameState.runStats.dashes++; this.playSound('dash'); this.showQuote('slide'); setTimeout(() => this.gameState.isDashing = false, 300); } }
+        doDash() {
+            if (!this.gameState.isDashing && this.skills.dash.unlocked && this.skills.dash.cooldown <= 0) {
+                this.vibrate(75);
+                this.triggerScreenShake(0.3, 150);
+                this.gameState.isDashing = true;
+                this.skills.dash.cooldown = this.skills.dash.duration;
+                this.updateSkillUI();
+                this.gameState.runStats.dashes++;
+                this.playSound('dash');
+                this.showQuote('slide');
+                setTimeout(() => this.gameState.isDashing = false, 300);
+            }
+        }
         updateSkillUI() { for (const [s,d] of Object.entries(this.skills)) { const e = this.elements[`skill-${s}`]; if (!e) continue; e.classList.toggle('unlocked', d.unlocked); e.classList.toggle('cooldown', d.cooldown > 0); } }
         togglePause() { if (!this.gameState.isPlaying) return; this.gameState.isPaused = !this.gameState.isPaused; this.elements['pause-btn'].innerHTML = this.gameState.isPaused ? '▶' : '||'; }
         onWindowResize() { if (!this.camera || !this.renderer) return; this.camera.aspect = window.innerWidth / window.innerHeight; this.camera.updateProjectionMatrix(); this.renderer.setSize(window.innerWidth, window.innerHeight); this.composer.setSize(window.innerWidth, window.innerHeight); }
@@ -657,8 +994,30 @@
     window.onload = () => {
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('service-worker.js')
-                .then(reg => console.log('Service Worker zaregistrován.', reg))
+                .then(reg => {
+                    console.log('Service Worker zaregistrován.', reg);
+
+                    // Check for updates
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // New version available
+                                const updateNotif = document.getElementById('update-notification');
+                                if (updateNotif) {
+                                    updateNotif.classList.add('active');
+                                    setTimeout(() => updateNotif.classList.remove('active'), 10000);
+                                }
+                            }
+                        });
+                    });
+                })
                 .catch(err => console.error('Chyba registrace Service Workeru:', err));
+
+            // Handle service worker messages
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                window.location.reload();
+            });
         }
 
         new FofrPedro3DHardcore();
