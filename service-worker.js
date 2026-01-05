@@ -1,5 +1,5 @@
 // Název cache - změňte pro invalidaci a novou instalaci
-const CACHE_NAME = 'pedrova-jizda-cache-v3';
+const CACHE_NAME = 'pedrova-jizda-cache-v4';
 // Seznam všech souborů, které jsou potřeba pro offline běh
 const assetsToCache = [
   './',
@@ -91,5 +91,15 @@ self.addEventListener('fetch', event => {
       return cachedResponse || fetchPromise;
     })
   );
+});
+
+/**
+ * Událost 'message':
+ * Zpracovává zprávy z klienta (např. požadavek na SKIP_WAITING pro okamžitou aktivaci nové verze).
+ */
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
