@@ -257,12 +257,12 @@
         }
 
         async initThreeEngine() {
-            const THREE = await import('https://cdn.skypack.dev/three@0.132.2');
-            const { Reflector } = await import('https://cdn.skypack.dev/three@0.132.2/examples/jsm/objects/Reflector.js');
-            const { EffectComposer } = await import('https://cdn.skypack.dev/three@0.132.2/examples/jsm/postprocessing/EffectComposer.js');
-            const { RenderPass } = await import('https://cdn.skypack.dev/three@0.132.2/examples/jsm/postprocessing/RenderPass.js');
-            const { UnrealBloomPass } = await import('https://cdn.skypack.dev/three@0.132.2/examples/jsm/postprocessing/UnrealBloomPass.js');
-            const { ShaderPass } = await import('https://cdn.skypack.dev/three@0.132.2/examples/jsm/postprocessing/ShaderPass.js');
+            const THREE = await import('https://cdn.skypack.dev/three@0.170.0');
+            const { Reflector } = await import('https://cdn.skypack.dev/three@0.170.0/examples/jsm/objects/Reflector.js');
+            const { EffectComposer } = await import('https://cdn.skypack.dev/three@0.170.0/examples/jsm/postprocessing/EffectComposer.js');
+            const { RenderPass } = await import('https://cdn.skypack.dev/three@0.170.0/examples/jsm/postprocessing/RenderPass.js');
+            const { UnrealBloomPass } = await import('https://cdn.skypack.dev/three@0.170.0/examples/jsm/postprocessing/UnrealBloomPass.js');
+            const { ShaderPass } = await import('https://cdn.skypack.dev/three@0.170.0/examples/jsm/postprocessing/ShaderPass.js');
             
             this.THREE = THREE;
             this.playerCollider = new this.THREE.Box3();
