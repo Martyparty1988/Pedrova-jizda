@@ -223,12 +223,15 @@
             this.elements = {}; this.gameState = {}; this.lastRunStats = {}; this.audio = { context: null, sfxEnabled: true };
             this.skills = { doubleJump: { unlocked: false, cooldown: 0, duration: 2000 }, dash: { unlocked: false, cooldown: 0, duration: 5000 } };
             this.quoteTimeout = null; this.JUMP_FORCE = 16; this.GRAVITY = -45; this.LANE_WIDTH = 4;
-            
+
             // Materials cache
             this.boxMaterial = null;
             this.cylinderMaterial = null;
             this.powerupMaterial = null;
-            
+
+            // Safari/iOS detection for performance optimization
+            this.isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
             this.init();
         }
 
@@ -272,7 +275,23 @@
             this.camera.position.set(0, 4, 10);
 
             try {
-                this.renderer = new THREE.WebGLRenderer({ canvas: this.elements['game-canvas'], antialias: true, alpha: true, powerPreference: "high-performance" });
+                // Safari/iOS compatibility: Try with optimal settings first, fallback if needed
+                const rendererOptions = {
+                    canvas: this.elements['game-canvas'],
+                    antialias: !this.isIOS, // Disable on iOS for better performance
+                    alpha: true,
+                    powerPreference: "high-performance",
+                    preserveDrawingBuffer: false // Better for iOS
+                };
+
+                try {
+                    this.renderer = new THREE.WebGLRenderer(rendererOptions);
+                } catch (firstError) {
+                    // Fallback for Safari: try without powerPreference
+                    delete rendererOptions.powerPreference;
+                    this.renderer = new THREE.WebGLRenderer(rendererOptions);
+                }
+
                 if (this.renderer.getContext() === null) throw new Error("Nepodařilo se získat WebGL kontext.");
             } catch (e) {
                 throw new Error(`Selhání inicializace WebGL Rendereru: ${e.message}`);
@@ -353,7 +372,14 @@
             });
 
             const floorGeo = new this.THREE.PlaneGeometry(30, 200);
-            this.floor = new Reflector(floorGeo, { clipBias: 0.003, textureWidth: window.innerWidth * window.devicePixelRatio, textureHeight: window.innerHeight * window.devicePixelRatio, color: 0x222222 });
+            // iOS optimization: Use lower resolution reflection texture to improve performance
+            const reflectionScale = this.isIOS ? 0.5 : 1.0;
+            this.floor = new Reflector(floorGeo, {
+                clipBias: 0.003,
+                textureWidth: window.innerWidth * window.devicePixelRatio * reflectionScale,
+                textureHeight: window.innerHeight * window.devicePixelRatio * reflectionScale,
+                color: 0x222222
+            });
             this.floor.rotation.x = -Math.PI / 2; this.floor.position.y = -1; this.scene.add(this.floor);
             
             this.keyLight = new this.THREE.SpotLight(0xffffff, 2.0, 100, Math.PI / 4, 0.8);
