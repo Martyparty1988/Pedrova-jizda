@@ -1,5 +1,5 @@
 // Název cache - změňte pro invalidaci a novou instalaci
-const CACHE_NAME = 'pedrova-jizda-cache-v2';
+const CACHE_NAME = 'pedrova-jizda-cache-v3';
 // Seznam všech souborů, které jsou potřeba pro offline běh
 const assetsToCache = [
   './',
@@ -7,12 +7,12 @@ const assetsToCache = [
   'icon.svg',
   'manifest.json',
   // Externí zdroje jako Skypack a Google Fonts jsou také potřeba
-  'https://cdn.skypack.dev/three@0.132.2',
-  'https://cdn.skypack.dev/three@0.132.2/examples/jsm/objects/Reflector.js',
-  'https://cdn.skypack.dev/three@0.132.2/examples/jsm/postprocessing/EffectComposer.js',
-  'https://cdn.skypack.dev/three@0.132.2/examples/jsm/postprocessing/RenderPass.js',
-  'https://cdn.skypack.dev/three@0.132.2/examples/jsm/postprocessing/UnrealBloomPass.js',
-  'https://cdn.skypack.dev/three@0.132.2/examples/jsm/postprocessing/ShaderPass.js',
+  'https://cdn.skypack.dev/three@0.170.0',
+  'https://cdn.skypack.dev/three@0.170.0/examples/jsm/objects/Reflector.js',
+  'https://cdn.skypack.dev/three@0.170.0/examples/jsm/postprocessing/EffectComposer.js',
+  'https://cdn.skypack.dev/three@0.170.0/examples/jsm/postprocessing/RenderPass.js',
+  'https://cdn.skypack.dev/three@0.170.0/examples/jsm/postprocessing/UnrealBloomPass.js',
+  'https://cdn.skypack.dev/three@0.170.0/examples/jsm/postprocessing/ShaderPass.js',
   'https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,700;1,400&family=Teko:wght@400;600&display=swap'
 ];
 
