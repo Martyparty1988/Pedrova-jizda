@@ -1,105 +1,75 @@
-// Název cache - změňte pro invalidaci a novou instalaci
-const CACHE_NAME = 'pedrova-jizda-cache-v4';
-// Seznam všech souborů, které jsou potřeba pro offline běh
-const assetsToCache = [
+const CACHE_NAME = 'pedrova-jizda-v1';
+
+const ASSETS = [
   './',
-  'index.html',
-  'icon.svg',
-  'manifest.json',
-  // Externí zdroje jako Skypack a Google Fonts jsou také potřeba
-  'https://cdn.skypack.dev/three@0.170.0',
-  'https://cdn.skypack.dev/three@0.170.0/examples/jsm/objects/Reflector.js',
-  'https://cdn.skypack.dev/three@0.170.0/examples/jsm/postprocessing/EffectComposer.js',
-  'https://cdn.skypack.dev/three@0.170.0/examples/jsm/postprocessing/RenderPass.js',
-  'https://cdn.skypack.dev/three@0.170.0/examples/jsm/postprocessing/UnrealBloomPass.js',
-  'https://cdn.skypack.dev/three@0.170.0/examples/jsm/postprocessing/ShaderPass.js',
-  'https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,700;1,400&family=Teko:wght@400;600&display=swap'
+  './index.html',
+  './manifest.json',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
-/**
- * Událost 'install':
- * Spustí se při první instalaci Service Workeru.
- * Otevře cache a vloží do ní všechny definované assety.
- */
-self.addEventListener('install', event => {
+self.addEventListener('install', (event) => {
+  console.log('[SW] Install');
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('[Service Worker] Přednačítám soubory do cache.');
-        return cache.addAll(assetsToCache);
-      })
-      .catch(error => {
-        console.error('[Service Worker] Chyba při přednačítání souborů:', error);
-      })
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('[SW] Caching assets');
+      return cache.addAll(ASSETS);
+    })
   );
+  self.skipWaiting();
 });
 
-/**
- * Událost 'activate':
- * Spustí se, když je nový Service Worker aktivován.
- * Projde všechny existující cache a smaže ty, které neodpovídají aktuální verzi (CACHE_NAME).
- * Tím je zajištěno, že se používají vždy nejnovější soubory.
- */
-self.addEventListener('activate', event => {
+self.addEventListener('activate', (event) => {
+  console.log('[SW] Activate');
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('[Service Worker] Mažu starou cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => {
+            console.log('[SW] Removing old cache:', key);
+            return caches.delete(key);
+          })
+      )
+    )
   );
   return self.clients.claim();
 });
 
-/**
- * Událost 'fetch':
- * Zachytává všechny síťové požadavky ze stránky.
- * Implementuje strategii "Stale-While-Revalidate":
- * 1. Okamžitě se pokusí odpovědět souborem z cache (rychlé načtení).
- * 2. Současně pošle požadavek na síť, aby získal nejnovější verzi.
- * 3. Pokud je síťový požadavek úspěšný, aktualizuje soubor v cache pro příští návštěvu.
- * 4. Pokud soubor v cache není, čeká na odpověď ze sítě.
- */
-self.addEventListener('fetch', event => {
-  // Ignorujeme požadavky, které nejsou typu GET
-  if (event.request.method !== 'GET') {
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+
+  // Pouze GET requesty ze stejného originu
+  if (request.method !== 'GET' || !request.url.startsWith(self.location.origin)) {
     return;
   }
 
   event.respondWith(
-    caches.open(CACHE_NAME).then(async (cache) => {
-      const cachedResponse = await cache.match(event.request);
-      
-      const fetchPromise = fetch(event.request).then((networkResponse) => {
-        // Pokud je odpověď ze sítě v pořádku, aktualizujeme cache
-        if (networkResponse && networkResponse.status === 200) {
-          cache.put(event.request, networkResponse.clone());
-        }
-        return networkResponse;
-      }).catch(error => {
-        console.warn('[Service Worker] Síťový požadavek selhal. Použije se cache, pokud je dostupná.', error);
-        // Pokud síť selže, vrátíme alespoň to, co je v cache
-        return cachedResponse;
-      });
+    caches.match(request).then((cached) => {
+      if (cached) {
+        console.log('[SW] Cache hit:', request.url);
+        return cached;
+      }
 
-      // Vrátíme odpověď z cache, pokud existuje (pro rychlost), jinak čekáme na síť
-      return cachedResponse || fetchPromise;
+      console.log('[SW] Fetching:', request.url);
+      return fetch(request)
+        .then((response) => {
+          // Nekešovat non-200 odpovědi
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+          }
+
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, clone);
+          });
+
+          return response;
+        })
+        .catch(() => {
+          console.log('[SW] Fetch failed, returning offline fallback');
+          return caches.match('./index.html');
+        });
     })
   );
 });
-
-/**
- * Událost 'message':
- * Zpracovává zprávy z klienta (např. požadavek na SKIP_WAITING pro okamžitou aktivaci nové verze).
- */
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-});
-
