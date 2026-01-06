@@ -1,9 +1,10 @@
-const CACHE_NAME = 'pedrova-jizda-v1';
+const CACHE_NAME = 'pedrova-jizda-v2';
 
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './icon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png'
 ];
@@ -39,7 +40,6 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
-  // Pouze GET requesty ze stejného originu
   if (request.method !== 'GET' || !request.url.startsWith(self.location.origin)) {
     return;
   }
@@ -54,7 +54,6 @@ self.addEventListener('fetch', (event) => {
       console.log('[SW] Fetching:', request.url);
       return fetch(request)
         .then((response) => {
-          // Nekešovat non-200 odpovědi
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
