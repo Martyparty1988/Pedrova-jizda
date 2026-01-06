@@ -1,16 +1,25 @@
 {
-    "name": "Pedrova jízda",
-    "short_name": "Pedrova jízda",
-    "start_url": "index.html",
-    "display": "fullscreen",
-    "orientation": "portrait",
-    "background_color": "#121212",
-    "theme_color": "#00AACC",
-    "icons": [
-        {
-            "src": "icon.svg",
-            "sizes": "192x192 512x512",
-            "type": "image/svg+xml"
-        }
-    ]
+  "name": "Pedrova jízda",
+  "short_name": "Pedro",
+  "description": "Procedurální underground runner s vlastním WebGL enginem.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#00AACC",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }
