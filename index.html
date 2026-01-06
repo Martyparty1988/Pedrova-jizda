@@ -2,7 +2,9 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
     <title>Pedrova jízda</title>
     <meta name="description" content="Procedurální underground runner s vlastním WebGL enginem.">
     <meta name="theme-color" content="#00AACC">
@@ -376,12 +378,13 @@
         }
 
         async initThreeEngine() {
-            const THREE = await import('https://cdn.skypack.dev/three@0.170.0');
-            const { Reflector } = await import('https://cdn.skypack.dev/three@0.170.0/examples/jsm/objects/Reflector.js');
-            const { EffectComposer } = await import('https://cdn.skypack.dev/three@0.170.0/examples/jsm/postprocessing/EffectComposer.js');
-            const { RenderPass } = await import('https://cdn.skypack.dev/three@0.170.0/examples/jsm/postprocessing/RenderPass.js');
-            const { UnrealBloomPass } = await import('https://cdn.skypack.dev/three@0.170.0/examples/jsm/postprocessing/UnrealBloomPass.js');
-            const { ShaderPass } = await import('https://cdn.skypack.dev/three@0.170.0/examples/jsm/postprocessing/ShaderPass.js');
+            // Use esm.sh CDN for better Safari/iOS compatibility
+            const THREE = await import('https://esm.sh/three@0.170.0');
+            const { Reflector } = await import('https://esm.sh/three@0.170.0/examples/jsm/objects/Reflector.js');
+            const { EffectComposer } = await import('https://esm.sh/three@0.170.0/examples/jsm/postprocessing/EffectComposer.js');
+            const { RenderPass } = await import('https://esm.sh/three@0.170.0/examples/jsm/postprocessing/RenderPass.js');
+            const { UnrealBloomPass } = await import('https://esm.sh/three@0.170.0/examples/jsm/postprocessing/UnrealBloomPass.js');
+            const { ShaderPass } = await import('https://esm.sh/three@0.170.0/examples/jsm/postprocessing/ShaderPass.js');
             
             this.THREE = THREE;
             this.playerCollider = new this.THREE.Box3();
@@ -395,32 +398,48 @@
                 const rendererOptions = {
                     canvas: this.elements['game-canvas'],
                     antialias: !this.isIOS, // Disable on iOS for better performance
-                    alpha: true,
-                    powerPreference: "high-performance",
-                    preserveDrawingBuffer: false // Better for iOS
+                    alpha: false, // Better performance on iOS
+                    powerPreference: this.isIOS ? "default" : "high-performance",
+                    preserveDrawingBuffer: false, // Better for iOS
+                    failIfMajorPerformanceCaveat: false, // Allow on slower devices
+                    stencil: false, // Disable stencil buffer for better iOS performance
+                    depth: true
                 };
 
                 try {
                     this.renderer = new THREE.WebGLRenderer(rendererOptions);
                 } catch (firstError) {
-                    // Fallback for Safari: try without powerPreference
-                    delete rendererOptions.powerPreference;
-                    this.renderer = new THREE.WebGLRenderer(rendererOptions);
+                    console.warn('Pokus o základní WebGL kontext...', firstError);
+                    // Fallback for Safari: minimal options
+                    this.renderer = new THREE.WebGLRenderer({
+                        canvas: this.elements['game-canvas'],
+                        antialias: false,
+                        alpha: false,
+                        failIfMajorPerformanceCaveat: false
+                    });
                 }
 
-                if (this.renderer.getContext() === null) throw new Error("Nepodařilo se získat WebGL kontext.");
+                const gl = this.renderer.getContext();
+                if (!gl) throw new Error("Nepodařilo se získat WebGL kontext.");
+
+                // Check WebGL version for compatibility
+                console.log('WebGL Version:', gl.getParameter(gl.VERSION));
+                console.log('WebGL Vendor:', gl.getParameter(gl.VENDOR));
             } catch (e) {
                 throw new Error(`Selhání inicializace WebGL Rendereru: ${e.message}`);
             }
 
             this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            this.renderer.setClearColor(0x000000, 0);
+            // Lower pixel ratio on iOS for better performance
+            this.renderer.setPixelRatio(this.isIOS ? 1 : Math.min(window.devicePixelRatio, 2));
+            this.renderer.setClearColor(0x000000, 1);
             this.clock = new THREE.Clock();
-            
+
             const composer = new EffectComposer(this.renderer);
             composer.addPass(new RenderPass(this.scene, this.camera));
-            const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.8, 0.8, 0.2);
+            // Reduce bloom intensity on iOS for better performance
+            const bloomStrength = this.isIOS ? 0.4 : 0.8;
+            const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), bloomStrength, 0.8, 0.2);
             composer.addPass(bloomPass);
 
             const customShader = {
@@ -440,7 +459,9 @@
             this.scene.add(new this.THREE.AmbientLight(0x404040, 1.5));
 
             const playerGroup = new this.THREE.Group();
-            const coreGeo = new this.THREE.SphereGeometry(0.2, 16, 8);
+            // Reduce geometry complexity on iOS
+            const sphereSegments = this.isIOS ? 8 : 16;
+            const coreGeo = new this.THREE.SphereGeometry(0.2, sphereSegments, sphereSegments / 2);
             const coreMat = new this.THREE.MeshPhongMaterial({color: 0xffffff, emissive: 0x00BFFF, emissiveIntensity: 3});
             const core = new this.THREE.Mesh(coreGeo, coreMat);
 
@@ -458,7 +479,10 @@
             sharedTunnelTex.wrapS = sharedTunnelTex.wrapT = this.THREE.RepeatWrapping;
 
             const tubePath = new this.THREE.LineCurve3(new this.THREE.Vector3(0,0,0), new this.THREE.Vector3(0,0,-200));
-            const tubeGeo = new this.THREE.TubeGeometry(tubePath, 12, 8, 8, false);
+            // Reduce tube segments on iOS for better performance
+            const tubeSegments = this.isIOS ? 8 : 12;
+            const tubeRadialSegments = this.isIOS ? 6 : 8;
+            const tubeGeo = new this.THREE.TubeGeometry(tubePath, tubeSegments, 8, tubeRadialSegments, false);
             // Use shared texture
             const tubeMat = new this.THREE.MeshStandardMaterial({ map: sharedTunnelTex, side: this.THREE.BackSide, roughness: 0.8, metalness: 0.2 });
             this.tunnel = new this.THREE.Mesh(tubeGeo, tubeMat);
@@ -535,7 +559,19 @@
             return new this.THREE.CanvasTexture(canvas);
         }
 
-        initAudio() { try { this.audio.context = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { this.audio.sfxEnabled = false; } }
+        initAudio() {
+            try {
+                // Safari/iOS requires webkitAudioContext
+                this.audio.context = new (window.AudioContext || window.webkitAudioContext)();
+                // Safari requires resume() after user interaction
+                if (this.audio.context.state === 'suspended') {
+                    console.log('AudioContext suspended, will resume on user interaction');
+                }
+            } catch(e) {
+                console.warn('AudioContext initialization failed:', e);
+                this.audio.sfxEnabled = false;
+            }
+        }
         loadStats() { this.elements['best-score'].textContent = localStorage.getItem('fp3d_bestScore') || 0; }
         setupEventListeners() {
             this.elements['play-btn'].addEventListener('click', () => this.startGame());
@@ -655,7 +691,9 @@
         }
 
         createParticle(position, color = 0x00BFFF) {
-            if (!this.THREE || this.particles.length > 50) return;
+            // Limit particles on iOS for better performance
+            const maxParticles = this.isIOS ? 20 : 50;
+            if (!this.THREE || this.particles.length > maxParticles) return;
 
             const geo = new this.THREE.SphereGeometry(0.1, 4, 4);
             const mat = new this.THREE.MeshBasicMaterial({ color });
@@ -709,7 +747,12 @@
         }
 
         startGame() {
-            if (this.audio.context && this.audio.context.state === 'suspended') this.audio.context.resume();
+            // Ensure audio context is running on Safari/iOS
+            if (this.audio.context) {
+                if (this.audio.context.state === 'suspended') {
+                    this.audio.context.resume().catch(e => console.warn('AudioContext resume failed:', e));
+                }
+            }
             this.gameState = { isPlaying: true, isPaused: false, score: 0, startTime: Date.now(), speed: 20, baseSpeed: 20, maxSpeed: 60, lane: 1, playerY: -0.6, playerVelocityY: 0, jumpCount: 0, isDashing: false, runStats: { jumps: 0, dashes: 0, obstaclesDodged: 0, powerups: 0 } };
             this.skills.doubleJump.unlocked = true; this.skills.dash.unlocked = true;
             this.skills.doubleJump.cooldown = 0; this.skills.dash.cooldown = 0;
@@ -802,7 +845,8 @@
                     mesh = new this.THREE.Mesh(geo, this.boxMaterial);
                     mesh.position.set((lane - 1) * this.LANE_WIDTH, 3, zPos);
                 } else {
-                    geo = new this.THREE.CylinderGeometry(0.5, 0.5, this.LANE_WIDTH * 3.2, 16);
+                    const cylinderSegments = this.isIOS ? 8 : 16;
+                    geo = new this.THREE.CylinderGeometry(0.5, 0.5, this.LANE_WIDTH * 3.2, cylinderSegments);
                     mesh = new this.THREE.Mesh(geo, this.cylinderMaterial);
                     mesh.rotation.z = Math.PI / 2;
                     mesh.position.set(0, 0, zPos);
@@ -831,7 +875,8 @@
 
             if (!obj) {
                 // Create new if pool is empty
-                const geo = new this.THREE.CylinderGeometry(0.1, 0.1, 0.8, 8);
+                const powerupSegments = this.isIOS ? 6 : 8;
+                const geo = new this.THREE.CylinderGeometry(0.1, 0.1, 0.8, powerupSegments);
                 const mesh = new this.THREE.Mesh(geo, this.powerupMaterial);
                 mesh.rotation.x = Math.PI/2;
                 mesh.position.set((lane - 1) * this.LANE_WIDTH, -0.4, zPos);
