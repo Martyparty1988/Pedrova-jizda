@@ -2,27 +2,23 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
     <title>Pedrova jízda</title>
     <meta name="description" content="Procedurální underground runner s vlastním WebGL enginem.">
     <meta name="theme-color" content="#00AACC">
-
-    <!-- PWA a Apple meta tagy pro fullscreen aplikaci -->
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pedrova jízda">
-
+    
     <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
-    <link rel="icon" href="icons/icon-192.png" type="image/png">
-
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,700;1,400&family=Teko:wght@400;600&display=swap"
-        rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,700;1,400&family=Teko:wght@400;600&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --junkie-cyan: #00BFFF;
@@ -30,8 +26,8 @@
             --junkie-yellow: #FFD700;
             --dark-concrete: #121212;
             --glass-secondary: rgba(18, 18, 18, 0.85);
-            --glass-border: rgba(128, 128, 128, 0.25);
-            --glass-highlight: rgba(200, 200, 200, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.05);
             --text-cyber: #EAEAEA;
             --text-glow: #00BFFF;
             --text-dim: rgba(234, 234, 234, 0.7);
@@ -70,7 +66,10 @@
             padding: 20px;
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
+            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+                        visibility 0.5s,
+                        transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(0.95);
             z-index: 10;
         }
 
@@ -78,15 +77,19 @@
             opacity: 1;
             visibility: visible;
             z-index: 20;
+            transform: scale(1);
         }
 
         .glass-panel {
-            background: var(--glass-secondary);
-            backdrop-filter: blur(15px) saturate(120%);
-            -webkit-backdrop-filter: blur(15px) saturate(120%);
+            background: linear-gradient(135deg, rgba(18, 18, 18, 0.9) 0%, rgba(18, 18, 18, 0.85) 100%);
+            backdrop-filter: blur(20px) saturate(150%);
+            -webkit-backdrop-filter: blur(20px) saturate(150%);
             border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7), inset 0 1px 0 var(--glass-highlight);
+            border-radius: 28px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.8),
+                0 0 0 1px var(--glass-highlight) inset,
+                0 8px 16px rgba(0, 191, 255, 0.1);
             padding: 40px;
             max-width: 520px;
             width: 100%;
@@ -95,28 +98,47 @@
             overflow: hidden;
         }
 
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 191, 255, 0.08) 0%, transparent 70%);
+            animation: pulseGlow 8s ease-in-out infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.1); opacity: 0.6; }
+        }
+
         .cyber-title {
             font-family: 'Roboto Condensed', sans-serif;
-            font-size: clamp(3rem, 10vw, 4.5rem);
+            font-size: clamp(3rem, 10vw, 5rem);
             font-weight: 700;
-            letter-spacing: -3px;
+            letter-spacing: -4px;
             text-transform: uppercase;
-            background: linear-gradient(135deg, var(--junkie-cyan) 0%, var(--junkie-magenta) 100%);
+            background: linear-gradient(135deg, 
+                var(--junkie-cyan) 0%, 
+                #00D4FF 25%,
+                var(--junkie-magenta) 75%,
+                #FF4DA6 100%);
             background-size: 200% 200%;
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: titleFlow 6s ease-in-out infinite;
-            margin-bottom: 8px;
+            animation: titleFlow 8s ease-in-out infinite;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 0 20px rgba(0, 191, 255, 0.5));
         }
 
         @keyframes titleFlow {
-            0%, 100% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
         .subtitle {
@@ -133,20 +155,40 @@
             background: linear-gradient(135deg, var(--junkie-cyan) 0%, var(--junkie-magenta) 100%);
             background-size: 200% 200%;
             border: none;
-            border-radius: 12px;
+            border-radius: 16px;
             color: #FFFFFF;
             font-family: 'Teko', sans-serif;
             font-size: 1.8rem;
             font-weight: 600;
-            padding: 14px 36px;
-            transition: all 0.4s ease;
+            padding: 16px 40px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             text-transform: uppercase;
             letter-spacing: 2px;
             cursor: pointer;
             margin: 10px 0;
             width: 100%;
-            box-shadow: 0 0 15px rgba(0, 191, 255, 0.4), inset 0 0 5px rgba(255, 255, 255, 0.2);
-            text-shadow: 0 0 5px #000;
+            box-shadow: 
+                0 4px 20px rgba(0, 191, 255, 0.3),
+                0 0 0 0 rgba(0, 191, 255, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cyber-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .cyber-btn:hover::before {
+            left: 100%;
         }
 
         .cyber-btn:disabled {
@@ -158,9 +200,17 @@
         }
 
         .cyber-btn:hover:not(:disabled) {
-            transform: translateY(-4px);
+            transform: translateY(-4px) scale(1.02);
             background-position: 100% 50%;
-            box-shadow: 0 0 25px rgba(0, 191, 255, 0.7);
+            box-shadow: 
+                0 8px 32px rgba(0, 191, 255, 0.6),
+                0 0 0 4px rgba(0, 191, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .cyber-btn:active:not(:disabled) {
+            transform: translateY(-2px) scale(0.98);
+            transition: all 0.1s;
         }
 
         #game-canvas {
@@ -185,6 +235,12 @@
             padding-top: env(safe-area-inset-top, 20px);
             padding-left: env(safe-area-inset-left, 20px);
             padding-right: env(safe-area-inset-right, 20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .game-hud.faded {
+            opacity: 0.3;
+            transform: scale(0.95);
         }
 
         .game-hud > * {
@@ -307,6 +363,24 @@
             color: #ff88aa;
         }
 
+        .combo-display {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            z-index: 150;
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--junkie-yellow);
+            text-shadow: 0 0 30px var(--junkie-yellow);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .combo-display.active {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
         .loading-spinner {
             width: 70px;
             height: 70px;
@@ -318,9 +392,7 @@
         }
 
         @keyframes spin {
-            100% {
-                transform: rotate(360deg);
-            }
+            100% { transform: rotate(360deg); }
         }
 
         .loading-text {
@@ -431,14 +503,13 @@
     <div id="quote-display" class="quote-display">
         <div id="quote-text" class="quote-text"></div>
     </div>
+    <div id="combo-display" class="combo-display"></div>
 </div>
 
 <div id="game-over" class="screen">
     <div class="glass-panel">
-        <h2 style="font-size: 3rem; color: var(--junkie-magenta); text-transform:uppercase; letter-spacing: 2px;">KONEC
-            JÍZDY</h2>
-        <p id="game-over-quote"
-           style="font-family:'Roboto Condensed', sans-serif; font-style: italic; color: var(--text-dim); margin-bottom: 20px; font-size: 1.1rem;"></p>
+        <h2 style="font-size: 3rem; color: var(--junkie-magenta); text-transform:uppercase; letter-spacing: 2px;">KONEC JÍZDY</h2>
+        <p id="game-over-quote" style="font-family:'Roboto Condensed', sans-serif; font-style: italic; color: var(--text-dim); margin-bottom: 20px; font-size: 1.1rem;"></p>
         <div class="final-score" id="final-score">0</div>
         <div class="stats-grid">
             <div class="stat-item">
@@ -452,10 +523,8 @@
         </div>
         <div id="ai-summary-container" style="margin: 20px 0; display: none;">
             <h3 style="color: var(--junkie-cyan); font-size:1.5rem; letter-spacing: 1px;">ZHODNOCENÍ ABSŤÁKU</h3>
-            <div id="ai-summary-spinner" class="loading-spinner"
-                 style="width: 30px; height: 30px; margin: 15px auto;"></div>
-            <p id="ai-summary-text"
-               style="font-family:'Roboto Condensed', sans-serif; font-style: italic; color: var(--text-dim); font-size: 1.1rem;"></p>
+            <div id="ai-summary-spinner" class="loading-spinner" style="width: 30px; height: 30px; margin: 15px auto;"></div>
+            <p id="ai-summary-text" style="font-family:'Roboto Condensed', sans-serif; font-style: italic; color: var(--text-dim); font-size: 1.1rem;"></p>
         </div>
         <div class="menu-buttons" style="display: flex; flex-direction: column; gap: 0;">
             <button class="cyber-btn" id="restart-btn">🔄 Zkusit to znovu</button>
@@ -553,25 +622,19 @@
             this.JUMP_FORCE = 16;
             this.GRAVITY = -45;
             this.LANE_WIDTH = 4;
-
-            // slide
             this.isSliding = false;
             this.SLIDE_DURATION = 0.5;
             this.SLIDE_Y_OFFSET = -0.4;
-
-            // Materials cache
             this.boxMaterial = null;
             this.cylinderMaterial = null;
             this.powerupMaterial = null;
-
             this.init();
         }
 
         async init() {
             this.getDOMElements();
             try {
-                this.elements['loading-text'].textContent = 'Míchám matroš...';
-                await this.initThreeEngine();
+                await this.loadWithProgress();
             } catch (error) {
                 console.error("Selhání inicializace WebGL/Three.js:", error);
                 this.showWebGLFallback();
@@ -582,6 +645,29 @@
             this.loadStats();
             this.elements['loading-screen'].classList.remove('active');
             this.elements['main-menu'].classList.add('active');
+        }
+
+        async loadWithProgress() {
+            const loadingText = this.elements['loading-text'];
+            const stages = [
+                'Hledám žílu...',
+                'Načítám jehly...',
+                'Mixuju látky...',
+                'Čistím stříkačky...',
+                'Připravuju trip...'
+            ];
+            
+            let stage = 0;
+            const loadingInterval = setInterval(() => {
+                if (stage < stages.length) {
+                    loadingText.textContent = stages[stage];
+                    stage++;
+                }
+            }, 300);
+            
+            await this.initThreeEngine();
+            clearInterval(loadingInterval);
+            loadingText.textContent = 'Hotovo!';
         }
 
         showWebGLFallback() {
@@ -597,7 +683,7 @@
                 'pause-btn', 'skill-doubleJump', 'skill-dash', 'loading-text',
                 'ai-summary-container', 'ai-summary-spinner', 'ai-summary-text',
                 'analyze-run-btn', 'quote-display', 'quote-text',
-                'game-over-quote', 'webgl-fallback'
+                'game-over-quote', 'webgl-fallback', 'combo-display'
             ];
             ids.forEach(id => this.elements[id] = document.getElementById(id));
         }
@@ -646,7 +732,6 @@
             );
             composer.addPass(bloomPass);
 
-            // upravený shader bez proužků
             const customShader = {
                 uniforms: {
                     "tDiffuse": {value: null},
@@ -672,7 +757,6 @@
             composer.addPass(shaderPass);
 
             this.composer = composer;
-
             this.setupWorld(Reflector);
         }
 
@@ -856,6 +940,8 @@
                 playerVelocityY: 0,
                 jumpCount: 0,
                 isDashing: false,
+                combo: 0,
+                comboTimer: 0,
                 runStats: {jumps: 0, dashes: 0, obstaclesDodged: 0, powerups: 0}
             };
 
@@ -910,6 +996,22 @@
             s.score += Math.floor(s.speed * delta * 10);
             this.elements['current-score'].textContent = s.score;
 
+            // Dynamic HUD fade
+            const hud = document.querySelector('.game-hud');
+            if (s.speed > 40 && s.playerVelocityY === 0) {
+                hud.classList.add('faded');
+            } else {
+                hud.classList.remove('faded');
+            }
+
+            // Combo timer
+            if (s.comboTimer > 0) {
+                s.comboTimer -= delta;
+                if (s.comboTimer <= 0) {
+                    s.combo = 0;
+                }
+            }
+
             if (s.playerY > -0.6 || s.playerVelocityY !== 0) {
                 s.playerVelocityY += this.GRAVITY * delta;
                 s.playerY += s.playerVelocityY * delta;
@@ -945,6 +1047,7 @@
 
             this.checkCollisions();
             this.cleanupObjects();
+            this.updateParticles(delta);
 
             this.camera.position.x += (this.player.position.x * 0.5 - this.camera.position.x) * 0.1;
             this.camera.position.y += (this.player.position.y + 3 - this.camera.position.y) * 0.1;
@@ -1019,6 +1122,7 @@
 
             for (let i = this.gameObjects.length - 1; i >= 0; i--) {
                 const obj = this.gameObjects[i];
+                if (obj.type === 'particle') continue;
                 if (Math.abs(obj.mesh.position.z - this.player.position.z) > 3) continue;
 
                 this.obstacleCollider.setFromObject(obj.mesh);
@@ -1028,7 +1132,10 @@
                         const kind = obj.mesh.userData.obstacleKind || 'normal';
 
                         if (kind === 'low' && this.isSliding) {
+                            this.gameState.combo++;
+                            this.gameState.comboTimer = 3;
                             this.gameState.runStats.obstaclesDodged++;
+                            this.showCombo();
                             this.scene.remove(obj.mesh);
                             obj.mesh.geometry.dispose();
                             this.gameObjects.splice(i, 1);
@@ -1047,6 +1154,10 @@
         collectPowerup(index) {
             this.vibrate(50);
             const obj = this.gameObjects[index];
+            const pos = obj.mesh.position;
+
+            this.spawnParticles(pos.x, pos.y, pos.z);
+
             this.scene.remove(obj.mesh);
             obj.mesh.geometry.dispose();
             this.gameObjects.splice(index, 1);
@@ -1065,9 +1176,60 @@
             setTimeout(() => this.gameState.baseSpeed -= 1, 5000);
         }
 
+        spawnParticles(x, y, z) {
+            for (let i = 0; i < 12; i++) {
+                const geo = new this.THREE.SphereGeometry(0.1, 4, 4);
+                const mat = new this.THREE.MeshBasicMaterial({
+                    color: Math.random() > 0.5 ? 0x00BFFF : 0x39FF14,
+                    transparent: true,
+                    opacity: 1
+                });
+                const particle = new this.THREE.Mesh(geo, mat);
+
+                particle.position.set(x, y, z);
+                particle.velocity = new this.THREE.Vector3(
+                    (Math.random() - 0.5) * 3,
+                    Math.random() * 4,
+                    (Math.random() - 0.5) * 3
+                );
+                particle.life = 1.0;
+
+                this.scene.add(particle);
+                this.gameObjects.push({mesh: particle, type: 'particle'});
+            }
+        }
+
+        updateParticles(delta) {
+            for (let i = this.gameObjects.length - 1; i >= 0; i--) {
+                const obj = this.gameObjects[i];
+                if (obj.type === 'particle') {
+                    obj.mesh.position.add(obj.mesh.velocity.clone().multiplyScalar(delta));
+                    obj.mesh.velocity.y -= 10 * delta;
+                    obj.life -= delta;
+                    obj.mesh.material.opacity = obj.life;
+
+                    if (obj.life <= 0) {
+                        this.scene.remove(obj.mesh);
+                        obj.mesh.geometry.dispose();
+                        obj.mesh.material.dispose();
+                        this.gameObjects.splice(i, 1);
+                    }
+                }
+            }
+        }
+
+        showCombo() {
+            if (this.gameState.combo < 2) return;
+            const comboEl = this.elements['combo-display'];
+            comboEl.textContent = `×${this.gameState.combo} COMBO!`;
+            comboEl.classList.add('active');
+            setTimeout(() => comboEl.classList.remove('active'), 800);
+        }
+
         cleanupObjects() {
             for (let i = this.gameObjects.length - 1; i >= 0; i--) {
                 const obj = this.gameObjects[i];
+                if (obj.type === 'particle') continue;
                 if (obj.mesh.position.z > this.camera.position.z + 10) {
                     this.scene.remove(obj.mesh);
                     obj.mesh.geometry.dispose();
