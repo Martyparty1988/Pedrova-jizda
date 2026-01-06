@@ -3,14 +3,15 @@
     "short_name": "Pedrova jízda",
     "start_url": "index.html",
     "display": "fullscreen",
-    "orientation": "portrait",
+    "orientation": "landscape",
     "background_color": "#121212",
     "theme_color": "#00AACC",
     "icons": [
         {
             "src": "icon.svg",
             "sizes": "192x192 512x512",
-            "type": "image/svg+xml"
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
         }
     ]
 }
