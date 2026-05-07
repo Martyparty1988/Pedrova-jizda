@@ -1,6 +1,6 @@
-const CACHE_NAME = 'pedrova-jizda-v2';
+const CACHE_NAME = 'pedrova-jizda-v3';
 
-const ASSETS = [
+const APP_SHELL = [
   './',
   './index.html',
   './manifest.json',
@@ -10,65 +10,67 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[SW] Install');
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Caching assets');
-      return cache.addAll(ASSETS);
-    })
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activate');
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
+    caches.keys()
+      .then((keys) => Promise.all(
         keys
           .filter((key) => key !== CACHE_NAME)
-          .map((key) => {
-            console.log('[SW] Removing old cache:', key);
-            return caches.delete(key);
-          })
-      )
-    )
+          .map((key) => caches.delete(key))
+      ))
+      .then(() => self.clients.claim())
   );
-  return self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
-  if (request.method !== 'GET' || !request.url.startsWith(self.location.origin)) {
+  if (request.method !== 'GET') return;
+
+  const requestUrl = new URL(request.url);
+  const isSameOrigin = requestUrl.origin === self.location.origin;
+  const isNavigation = request.mode === 'navigate';
+
+  if (isNavigation) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy));
+          return response;
+        })
+        .catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
+  if (!isSameOrigin) {
+    event.respondWith(
+      caches.match(request).then((cached) => cached || fetch(request))
+    );
     return;
   }
 
   event.respondWith(
     caches.match(request).then((cached) => {
-      if (cached) {
-        console.log('[SW] Cache hit:', request.url);
-        return cached;
-      }
-
-      console.log('[SW] Fetching:', request.url);
-      return fetch(request)
+      const networkFetch = fetch(request)
         .then((response) => {
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
+          if (response && response.status === 200 && response.type === 'basic') {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           }
-
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, clone);
-          });
-
           return response;
         })
-        .catch(() => {
-          console.log('[SW] Fetch failed, returning offline fallback');
-          return caches.match('./index.html');
-        });
+        .catch(() => cached || caches.match('./index.html'));
+
+      return cached || networkFetch;
     })
   );
 });
