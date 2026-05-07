@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
+  <title>Pedrova jízda</title>
+  <meta name="description" content="Procedurální underground runner s WebGL enginem.">
+  <meta name="theme-color" content="#00AACC">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Pedrova jízda">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,700;1,400&family=Teko:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app">
+    <section id="loading-screen" class="screen active">
+      <div class="glass-panel">
+        <h1 class="cyber-title">Pedrova jízda</h1>
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <p class="loading-text" id="loading-text">Startuju motor...</p>
+      </div>
+    </section>
+
+    <section id="main-menu" class="screen">
+      <div class="glass-panel">
+        <h1 class="cyber-title">Pedrova jízda</h1>
+        <p class="subtitle">Neonová honička začíná</p>
+        <button class="cyber-btn" id="play-btn" type="button">▶ Hrát</button>
+        <p class="hint">Ovládání: šipky / WASD / swipe. Nahoru skok, dolů skluz, doleva a doprava změna pruhu.</p>
+      </div>
+    </section>
+
+    <section id="game-screen" class="screen">
+      <canvas id="game-canvas"></canvas>
+      <div class="game-hud">
+        <div class="hud-panel">
+          <span class="hud-label">Skóre</span>
+          <div class="cyber-score" id="current-score">0</div>
+        </div>
+        <div class="hud-panel hud-actions">
+          <button id="mute-btn" class="icon-btn" type="button" aria-label="Zvuk">🔊</button>
+          <button id="pause-btn" class="icon-btn" type="button" aria-label="Pauza">Ⅱ</button>
+        </div>
+      </div>
+      <div class="skill-indicator">
+        <div id="skill-doubleJump" class="skill-btn">2× skok</div>
+        <div id="skill-dash" class="skill-btn">Dash</div>
+      </div>
+      <div id="quote-display" class="quote-display">
+        <div id="quote-text" class="quote-text"></div>
+      </div>
+      <div id="combo-display" class="combo-display"></div>
+    </section>
+
+    <section id="game-over" class="screen">
+      <div class="glass-panel">
+        <h2 class="screen-title danger">Konec jízdy</h2>
+        <p id="game-over-quote" class="quote-text inline-quote"></p>
+        <div class="final-score" id="final-score">0</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-label">Nejlepší jízda</div>
+            <div class="stat-value" id="best-score">0</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Čas</div>
+            <div class="stat-value" id="game-time">0s</div>
+          </div>
+        </div>
+        <div id="ai-summary-container" class="summary-box" hidden>
+          <h3>Hodnocení</h3>
+          <div id="ai-summary-spinner" class="loading-spinner small" aria-hidden="true"></div>
+          <p id="ai-summary-text"></p>
+        </div>
+        <div class="menu-buttons">
+          <button class="cyber-btn" id="restart-btn" type="button">🔄 Znovu</button>
+          <button class="cyber-btn secondary" id="analyze-run-btn" type="button">✍️ Hodnocení</button>
+          <button class="cyber-btn secondary" id="menu-btn" type="button">🏠 Menu</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="webgl-fallback" id="webgl-fallback" hidden>
+      <div class="glass-panel">
+        <h2 class="screen-title danger">Motor selhal</h2>
+        <p>Prohlížeč nespustil WebGL. Zkus aktualizovat prohlížeč, zapnout hardwarovou akceleraci nebo otevřít hru v jiném browseru.</p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
