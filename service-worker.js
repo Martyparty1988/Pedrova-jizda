@@ -1,8 +1,11 @@
-const CACHE_NAME = 'pedrova-jizda-v3';
+const CACHE_NAME = 'pedrova-jizda-v4';
 
 const APP_SHELL = [
   './',
   './index.html',
+  './index.split.html',
+  './style.css',
+  './app.js',
   './manifest.json',
   './icon.svg',
   './icons/icon-192.png',
@@ -46,7 +49,7 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy));
           return response;
         })
-        .catch(() => caches.match('./index.html'))
+        .catch(() => caches.match('./index.html') || caches.match('./index.split.html'))
     );
     return;
   }
@@ -68,7 +71,7 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => cached || caches.match('./index.html'));
+        .catch(() => cached || caches.match('./index.html') || caches.match('./index.split.html'));
 
       return cached || networkFetch;
     })

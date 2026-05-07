@@ -1,6 +1,6 @@
 # Pedrova jízda
 
-Procedurální underground runner v prohlížeči s vlastním WebGL/Three.js enginem, neonovým vizuálem a PWA podporou.
+Procedurální underground runner v prohlížeči s WebGL/Three.js enginem, neonovým vizuálem a PWA podporou.
 
 > Poznámka: hra používá černý humor a drsnější underground styl. Ber ji jako satirickou arkádu, ne jako návod na reálné chování.
 
@@ -13,6 +13,24 @@ Procedurální underground runner v prohlížeči s vlastním WebGL/Three.js eng
 - offline cache přes service worker
 - ukládání nejlepšího skóre lokálně v prohlížeči
 
+## Rozdělená struktura
+
+Nová rozdělená verze je připravená v těchto souborech:
+
+```text
+.
+├── index.split.html    # čisté HTML bez inline stylu a skriptu
+├── style.css           # vizuál, layout, HUD, menu a mobilní UI
+├── app.js              # herní logika, Three.js engine, ovládání a skóre
+├── index.html          # původní velká verze hry
+├── manifest.json       # PWA manifest
+├── service-worker.js   # offline cache
+├── icon.svg            # SVG ikona
+└── icons/              # PNG ikony pro PWA
+```
+
+`index.html` zatím zůstává původní hlavní vstup, aby se nerozbila nasazená verze. `index.split.html` je připravený jako čistá oddělená varianta, která načítá `style.css` a `app.js`.
+
 ## Spuštění
 
 Nejjednodušší lokálně:
@@ -21,32 +39,36 @@ Nejjednodušší lokálně:
 python3 -m http.server 8080
 ```
 
-Pak otevři:
+Pak otevři původní verzi:
 
 ```text
 http://localhost:8080
 ```
 
-Na iPhonu/iPadu je nejlepší nasadit projekt na GitHub Pages, Vercel nebo Netlify a otevřít přes HTTPS. Service worker a PWA režim se naplno chovají správně hlavně přes HTTPS.
-
-## Struktura
+Nebo rozdělenou verzi:
 
 ```text
-.
-├── index.html          # hlavní hra, styl a JavaScript
-├── manifest.json       # PWA manifest
-├── service-worker.js   # offline cache
-├── icon.svg            # SVG ikona
-└── icons/              # PNG ikony pro PWA
+http://localhost:8080/index.split.html
 ```
+
+Na iPhonu/iPadu je nejlepší nasadit projekt na GitHub Pages, Vercel nebo Netlify a otevřít přes HTTPS. Service worker a PWA režim se naplno chovají správně hlavně přes HTTPS.
+
+## Ovládání v rozdělené verzi
+
+- šipka doleva / `A` nebo swipe doleva: změna pruhu doleva
+- šipka doprava / `D` nebo swipe doprava: změna pruhu doprava
+- šipka nahoru / `W` / mezerník nebo tap: skok
+- šipka dolů / `S` nebo swipe dolů: skluz
+- `Shift`: dash po odemčení
+- `P` nebo `Esc`: pauza
 
 ## Doporučené další upgrady
 
-- rozdělit `index.html` na `style.css` a `app.js`
-- přidat jednoduché nastavení obtížnosti
-- přidat mute tlačítko pro zvuky
+- přepnout `index.split.html` na hlavní `index.html`
+- přidat výběr obtížnosti
 - přidat achievementy a seznam rekordů
-- přidat bezpečnější fallback, když se nenačte CDN s Three.js
+- přidat lokální bundlování Three.js místo CDN
+- přidat GitHub Pages workflow
 
 ## Deploy
 
