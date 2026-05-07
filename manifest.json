@@ -1,13 +1,34 @@
 {
+  "id": "pedrova-jizda",
   "name": "Pedrova jízda",
   "short_name": "Pedro",
-  "description": "Procedurální underground runner s vlastním WebGL enginem.",
-  "start_url": "./index.html",
+  "description": "Procedurální underground runner s vlastním WebGL enginem, neonovým vizuálem a PWA podporou.",
+  "lang": "cs",
+  "dir": "ltr",
+  "start_url": "./index.html?source=pwa",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "fullscreen", "minimal-ui", "browser"],
   "background_color": "#121212",
   "theme_color": "#00AACC",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "categories": ["games", "entertainment"],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Spustit Pedrovu jízdu",
+      "short_name": "Hrát",
+      "description": "Rychlé spuštění hry.",
+      "url": "./index.html?shortcut=play",
+      "icons": [
+        {
+          "src": "icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
   "icons": [
     {
       "src": "icon.svg",
